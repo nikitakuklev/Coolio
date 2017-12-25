@@ -25,7 +25,8 @@ static uint8_t new_state = 0;
 volatile uint8_t man_state = 0;
 static bool spinup_required = false;
 volatile bool manualpwm_changed = false;
-static bool immediate_fan_updt_reqd = false;
+volatile bool immediate_fan_updt_reqd = false;
+volatile bool fan_mode_changed = false;
 static uint8_t fanFailScores[FANARR_SIZE];
 
 // Timer
@@ -161,45 +162,59 @@ void loop() {
 
   // Temp update
   if (main_time > temp_update_time) {
+    #if (DEBUG)      
+      Serial.println(F("TEMP UPD - TICK"));
+      activity = true;
+    #endif
     updateTemps();   
     temp_update_time += LOOP_TEMP_UPDT;
     #if (DEBUG)
       printTemps();
-      Serial.println(F("TEMP UPDATE"));
-      activity = true;
     #endif
     tempAlarmCheck();
   }
   
   // Fan control update
   if (!GUImode) {
+    // Automatic fan control
     if (main_time > fanctrl_update_time || immediate_fan_updt_reqd) {
-           
-      doFanCtrlUpdate();     
-      fanctrl_update_time += LOOP_FANCTRL_UPDT;  
-      immediate_fan_updt_reqd = false;    
-      
       #if (DEBUG)
-        Serial.println(F("FANCTRL UPDATE"));
+        Serial.println(F("FANCTRL UPD"));
         activity = true;
-      #endif
+      #endif   
+      doFanCtrlUpdate();  
+      // If just changing into auto, need to reset last update time   
+      if (fan_mode_changed) {
+        #if (DEBUG)
+          Serial.println(F(" Adjusting upd time to current"));
+        #endif 
+        fanctrl_update_time = main_time + LOOP_FANCTRL_UPDT;
+        fan_mode_changed = false;
+      } else {
+        fanctrl_update_time += LOOP_FANCTRL_UPDT;
+      }        
+      immediate_fan_updt_reqd = false;
     } 
   } else { 
-    // If PWM target was modified by manual mode
+    // If PWM target was modified by manual mode, need to adjust
     if (manualpwm_changed || immediate_fan_updt_reqd) {
-      
+      #if (DEBUG)
+        Serial.println(F("MAN FANCTRL UPD"));
+        activity = true;
+      #endif      
       manualFanCtrlUpdate();
       manualGUIreset();
       manualpwm_changed = false;
       immediate_fan_updt_reqd = false;
-      
-      #if (DEBUG)
-        Serial.println(F("MAN FANCTRL UPDATE"));
-        activity = true;
-      #endif
+      GUI_update_required = true;   
+      GUI_immediateupdreqd = true;
     }
   }
   if (spinup_required) {
+    #if (DEBUG)
+      Serial.println(F("SPINUP START"));
+      activity = true;
+    #endif
     setFansToMax();
     delay(200);
     setFansToPWM();
@@ -211,68 +226,69 @@ void loop() {
   }  
   
   // Tachometer update
-  if (main_time > tach_update_time) {    
+  if (main_time > tach_update_time) {  
+    #if (DEBUG)      
+      Serial.println(F("TACH UPD - TICK"));
+      printFanDataMore();
+      activity = true;
+    #endif  
     doTachRun(100000);    
     tach_update_time += LOOP_TACH_UPDT;
-    #if (DEBUG)
-      printFanDataMore();
-      Serial.println(F("TACH UPDATE"));
-      activity = true;
-    #endif
     fanCtrlAlarmCheck();    
   }
   
   // Power consumption update
-  if (main_time > adc_update_time) {      
+  if (main_time > adc_update_time) {  
+    #if (DEBUG)
+      Serial.println(F("ADC UPD - TICK"));
+      activity = true;
+    #endif    
     updatePowerData();
     adcAlarmCheck();
     adc_update_time += LOOP_ADC_UPDT;
-    #if (DEBUG)
-      Serial.println(F("ADC UPDATE"));
-      activity = true;
-    #endif
   }  
   
   // EEPROM update
-  if ((main_time_micros - lastButtonTime > LCD_TIMEOUT) && (main_time_micros - lastEncoderTime > LCD_TIMEOUT)) {
-    // If no input for awhile, check if we should try to update again
-    if (main_time > lastEEPROMSaveTime + EEPROM_SVDELAY && (eeprom_guimode != GUImode || eeprom_manstate != man_state)) {
-      updateEEPROMvals();
-      #if (DEBUG)
-        Serial.println(F("EEPROM UPDATE"));
-        activity = true;
-      #endif
-    }
-  }
+//  if ((main_time_micros - lastButtonTime > LCD_TIMEOUT) && (main_time_micros - lastEncoderTime > LCD_TIMEOUT)) {
+//    // If no input for awhile, check if we should try to update again
+//    if (main_time > lastEEPROMSaveTime + EEPROM_SVDELAY && (eeprom_guimode != GUImode || eeprom_manstate != man_state)) {
+//      #if (DEBUG)
+//        Serial.println(F("EEPROM UPD - TICK"));
+//        activity = true;
+//      #endif
+//      //updateEEPROMvals();
+//    }
+//  }
     
   // GUI loop update
   #if HASLCD
-    if (main_time > gui_update_time) {        
+    if (main_time > gui_update_time) { 
+      #if (DEBUG)
+        Serial.println(F("GUI UPD - TICK"));
+        activity = true;
+      #endif       
       GUIloop();    
       gui_update_time += LOOP_GUI_UPDT;
+    } else if (GUI_immediateupdreqd) {
       #if (DEBUG)
-        Serial.println(F("GUI UPDATE"));
+        Serial.println(F("GUI UPD - IMM"));
         activity = true;
       #endif
-    } else if (GUI_immediateupdreqd) {
       GUIloop();
       gui_update_time += LOOP_GUI_UPDT;
-      #if (DEBUG)
-        Serial.println(F("IMM GUI UPDATE"));
-        activity = true;
-      #endif
+
     }
   #endif
 
   // LED update
-  if (main_time > led_update_time) {
-    updateLED();
-    led_update_time += LOOP_LED_UPDT;
-    #if (DEBUG)
-      Serial.println(F("LED UPDATE"));
-      activity = true;
-    #endif
-  }
+//  if (main_time > led_update_time) {
+//    #if (DEBUG)
+//      Serial.println(F("LED UPD - TICK"));
+//      activity = true;
+//    #endif
+//    updateLED();
+//    led_update_time += LOOP_LED_UPDT;
+//  }
 
   if (cleanup) {
     tachCleanup();

@@ -23,7 +23,7 @@ static void doTachRun(unsigned long timeout) {
   
   #if (DEBUG > 2)
     interrupts(); 
-    Serial.print(F("Starting tach run: ")); Serial.println(timeout);
+    Serial.print(F(" Starting tach for (us): ")); Serial.println(timeout);
     printT1Registers(); printPCRegisters(); printPORTDRegisters(); printPORTCRegisters();
     noInterrupts();
     PCINT2_err = 0; PCINT1_err = 0;
@@ -44,10 +44,10 @@ static void doTachRun(unsigned long timeout) {
   noInterrupts();  
   PCICR &= ~(_BV(PCIE2)|_BV(PCIE1));         // Disable PC interrupt    
   resumeTimer1();
+  interrupts();
   
-  #if (DEBUG > 1)
-    interrupts();
-    Serial.print("ErrD: "); Serial.print(PCINT2_err);
+  #if (DEBUG > 1)    
+    Serial.print(" ErrD: "); Serial.print(PCINT2_err);
     Serial.print(" | ErrC: "); Serial.println(PCINT1_err);
     uint16_t sum = 0;
     for (uint8_t i=0; i<FANARR_SIZE; i++) {
@@ -55,13 +55,13 @@ static void doTachRun(unsigned long timeout) {
         sum += numpts[i]+1;
       }
     }
-    Serial.print("ISR first call:"); Serial.print(ISRfirsttime);
-    Serial.print(" | Others:"); Serial.print(ISRtime); 
+    Serial.print(" First ISR:"); Serial.print(ISRfirsttime);
+    Serial.print(" | Others (t|#|avg): "); Serial.print(ISRtime); 
     Serial.print(" | "); Serial.print(numISRcalls);
-    Serial.print(" | Avg:"); Serial.print(ISRtime/numISRcalls);
+    Serial.print(" | "); Serial.print(ISRtime/numISRcalls);
     Serial.print(" | Missed:"); Serial.println(numISRcalls-sum);
   #endif
-
+  
   // rolling average via rotating buffer, so to speak
   static uint8_t readIndex = 0;
   uint16_t fanavg = 0;
@@ -84,8 +84,7 @@ static void doTachRun(unsigned long timeout) {
   fanrpmavg = fanavg/FANCTRL_ACTFANSN;
 //  #if (DEBUG>1) 
 //    printFanDataMore();
-//  #endif
-  interrupts();
+//  #endif  
 }
 
 // This ISR handles in fastest way the update of fan tach times
@@ -121,7 +120,7 @@ ISR (PCINT2_vect) {
     uint32_t curTime = micros();
     diff >>= PORTFP; 
     
-    #if DEBUG
+    #if (DEBUG)
       if (!diff) {
         ERRVAR = -1;
         return;
@@ -129,7 +128,7 @@ ISR (PCINT2_vect) {
     #endif   
     
     // Checks if more than 1 bit changed (means will miss at least 1 event)
-    #if DEBUG
+    #if (DEBUG)
       uint8_t temp = 0;
       uint8_t diff2 = diff;
       //skip first two bits
@@ -157,7 +156,7 @@ ISR (PCINT2_vect) {
       lastTrigTime[r] = curTime;
     }
     
-    #if DEBUG>1
+    #if (DEBUG>1)
       ISRtime += micros()-time1;
       ++numISRcalls;
     #endif
@@ -254,7 +253,7 @@ static inline void tachCleanup() {
   for(uint8_t i=0; i<FANARR_SIZE; ++i) {
     times[i] = 0; numpts[i] = 0;      
   }    
-  #if(DEBUG)
+  #if (DEBUG)
     numISRcalls = 0; 
     PCINT2_err = PCINT1_err = 0;
     ISRtime = ISRfirsttime = 0;

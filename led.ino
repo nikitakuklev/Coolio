@@ -43,7 +43,7 @@ static void setLED_panic() {
 
 static void setOKLed(uint8_t state) {
   #if (DEBUG>1)
-    Serial.print("LED green to "); Serial.println(state);
+    Serial.print(" LED green to "); Serial.println(state);
   #endif 
   if (led_green_state != state) {
     led_green_state = state;
@@ -65,7 +65,7 @@ static void setOKLed(uint8_t state) {
 
 static void setErrLed(uint8_t state) {
   #if (DEBUG>1)
-    Serial.print("LED red to "); Serial.println(state);
+    Serial.print(" LED red to "); Serial.println(state);
   #endif 
   if (led_red_state != state) {
     led_red_state = state;
@@ -86,7 +86,8 @@ static void updateLED() {
   static uint8_t green_blink = 0;
   static uint8_t red_blink = 0;
   #if (DEBUG>1)
-    Serial.print("Updating LEDs: "); Serial.print(led_green_state); Serial.print(led_red_state);Serial.print(fan_state);Serial.print(GUImode);
+    Serial.print(" Updating LEDs: "); Serial.print(led_green_state); Serial.print(led_red_state);
+    Serial.print(fan_state); Serial.print(GUImode);
     Serial.print(green_blink); Serial.println(red_blink);
   #endif 
 //  if (led_green_state == 1 && led_red_state == 1) {

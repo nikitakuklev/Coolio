@@ -5,7 +5,7 @@ static void analogWriteT1Raw(uint8_t pin, uint16_t value) {
   if (value > t1_topcnt) {
     declareError(TIMER1_WRONG_PWM);
     #if (DEBUG)
-      Serial.print("Timer 1 raw: WRONG VALUE "); Serial.println(value); 
+      Serial.print(" Timer 1 raw: WRONG VALUE "); Serial.println(value); 
     #endif
   } else {
     switch (pin) {
@@ -18,29 +18,32 @@ static void analogWriteT1Raw(uint8_t pin, uint16_t value) {
       default:        
           declareError(TIMER1_WRONG_PIN);
           #if (DEBUG)
-            Serial.print("Timer 1 raw: WRONG PIN "); Serial.println(pin); 
+            Serial.print(" Timer 1 raw: WRONG PIN "); Serial.println(pin); 
           #endif
           break; // no other pin will work
     }
     #if (DEBUG > 1)
-      Serial.print("Timer 1 raw: pin "); Serial.print(pin);
+      Serial.print(" Timer 1 raw: pin "); Serial.print(pin);
       Serial.print(" set to value "); Serial.println(value);
     #endif
   }
 }
 
+// Set timer1 specified pin to the desired relative (0-100) duty cycle
 static void analogWriteT1(uint8_t pin, uint32_t value) {
   if (value > 100) {
     declareError(TIMER1_WRONG_PWM);
     #if (DEBUG)
-      Serial.print("Timer 1: WRONG VALUE"); Serial.println(value); 
+      Serial.print(" Timer 1: WRONG VALUE"); Serial.println(value); 
     #endif
-  } else {   
+  } else {
+    uint16_t valueraw;
+    valueraw = (uint16_t)((value*t1_topcnt)/100);
     #if (DEBUG)
-      Serial.print("Timer 1 passing to raw: "); Serial.println(value); 
+      Serial.print(" Timer 1 - rel value "); Serial.print(value); 
+      Serial.print(" passed on as raw "); Serial.println(valueraw); 
     #endif
-    value = (uint16_t)((value*t1_topcnt)/100);
-    analogWriteT1Raw(pin,value);
+    analogWriteT1Raw(pin,valueraw);
 //    switch (pin) {
 //      case TIMER1_A_PIN:
 //          OCR1A = value;
@@ -107,7 +110,7 @@ static inline void setTimerPinsHigh() {
 static inline void stopTimer1() {
   // Stop PWM
   #if (DEBUG > 2)
-    Serial.println("Stopping timer 1");
+    Serial.println(" Stopping timer 1");
   #endif
   TCCR1A &= ~(_BV(COM1A1)|_BV(COM1B1)); 
 }
@@ -115,7 +118,7 @@ static inline void stopTimer1() {
 static inline void resumeTimer1() {
   // Resume PWM
   #if (DEBUG > 2)
-    Serial.println("Resuming timer 1");
+    Serial.println(" Resuming timer 1");
   #endif
   TCCR1A |= _BV(COM1A1)|_BV(COM1B1);
 }

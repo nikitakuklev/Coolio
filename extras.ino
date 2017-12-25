@@ -56,7 +56,8 @@ static void printPCRegisters() {
 //}
 
 static void printFanDataMore() {
-    for(uint8_t i=0; i<FANARR_SIZE; ++i) {
+  Serial.println(" Detailed fan data: ");
+  for(uint8_t i=0; i<FANARR_SIZE; ++i) {
 //    Serial.print(i); Serial.print(" | ");      
 //    Serial.print(times[i]); Serial.print(" | ");      
 //    if (numpts[i] > 0) {
@@ -65,19 +66,19 @@ static void printFanDataMore() {
 //      Serial.print(0);
 //    }
 //    Serial.print(" | ");
-//    Serial.println(numpts[i]);  
+//    Serial.println(numpts[i]); 
     if (numpts[i] > 0) {
-      Serial.print(i); Serial.print(" | ");      
+      Serial.print(  i); Serial.print(" | ");      
       Serial.print(times[i]); Serial.print(" | ");           
       Serial.print(fanrpms[i]); Serial.print(" | ");       
       Serial.println(numpts[i]);  
     }         
   }
-  Serial.print("Avg: "); Serial.println(fanrpmavg);
+  Serial.print(" Avg: "); Serial.println(fanrpmavg);
 }
 
 static void printTemps() {
-  Serial.print("IR: "); Serial.print(temp_IR);
+  Serial.print(" IR: "); Serial.print(temp_IR);
   Serial.print(" | SENS: "); Serial.print(temp_sensor);
   Serial.print(" | CHIP: "); Serial.println(temp_chip);
 }
@@ -87,6 +88,9 @@ static inline void bl() {
 }
 static inline void br() {
   Serial.print(")");
+}
+static inline void vline() {
+  Serial.print("|");
 }
 
 #endif

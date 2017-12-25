@@ -9,47 +9,55 @@ static const uint8_t temp_vals[FIMAX+1] = {FANCTRL_TEMP_OFF,FANCTRL_TEMP_BOT,T1(
 
 static void doFanCtrlUpdate() {
   #if (DEBUG>2)
-    Serial.println(F("Doing auto fan controller update"));
+    Serial.println(F(" Auto fan update"));
   #endif
   updatePWMvalues();
-  if (fan_state != new_state) {    
+  if (fan_state != new_state) {   
+    #if (DEBUG>1)
+      Serial.print(F(" Fan state change to ")); Serial.print(new_state);
+      Serial.print(F(" from ")); Serial.println(fan_state);
+    #endif  
     if (new_state != 0 && fan_state == 0) {
+      #if (DEBUG>1)
+        Serial.println(F(" New state >0 - spinup/power on"));
+      #endif
       setFanPower(true);
       spinup_required = true;
+    } else if (new_state == 0 && fan_state != 0) { 
       #if (DEBUG>1)
-        Serial.println(F("Spinup required, setting flag"));
-      #endif
-    } else if (new_state == 0 && fan_state != 0) {      
+        Serial.println(F(" New state is 0 - depowering"));
+      #endif     
       setFanPower(false);
-    }    
+    }
     fan_state = new_state;
-    #if (DEBUG>1)
-      Serial.print(F("Fan state changed to ")); Serial.println(fan_state);
-    #endif 
     setFansToPWM();   
   }
 }
 
 static inline void manualFanCtrlUpdate() {
   #if (DEBUG>2)
-    Serial.println(F("Doing manual fan controller update"));
+    Serial.print(F(" Manual fan update to ")); Serial.println(man_state);
   #endif
   new_state = man_state;
   t1_pwm_a = t1_pwm_b = pwm_vals[new_state];
-  if (fan_state != new_state) {    
+  if (fan_state != new_state) {  
+    #if (DEBUG>1)
+      Serial.print(F(" Man fan state change to ")); Serial.print(new_state);
+      Serial.print(F(" from ")); Serial.println(fan_state);
+    #endif  
     if (new_state != 0 && fan_state == 0) {
+      #if (DEBUG>1)
+        Serial.println(F(" New state >0 - spinup/power on"));
+      #endif
       setFanPower(true);
       spinup_required = true;
+    } else if (new_state == 0 && fan_state != 0) {    
       #if (DEBUG>1)
-        Serial.println(F("Spinup required, setting flag"));
-      #endif
-    } else if (new_state == 0 && fan_state != 0) {      
+        Serial.println(F(" New state is 0 - depowering"));
+      #endif   
       setFanPower(false);
     }    
     fan_state = new_state;
-    #if (DEBUG>1)
-      Serial.print(F("Manual fan state changed to ")); Serial.println(new_state);
-    #endif
     setFansToPWM();
   }
 }
@@ -68,7 +76,7 @@ static inline void manualFanCtrlDecrement() {
 
 static void updatePWMvalues() {
   #if (DEBUG>2)
-    Serial.println(F("Updating PWM values"));
+    Serial.println(F(" Calculating new PWM state"));
   #endif
   int16_t temp = (int16_t) temp_IR;
 //  int8_t new_state = 0;
@@ -94,7 +102,7 @@ static void updatePWMvalues() {
       new_state = nohyst_state;       
     } else {
       #if (DEBUG>2)
-        Serial.print(F("HYST DN TRIG, KEEPING STATE ")); Serial.println(fan_state);
+        Serial.print(F(" HYST DN TRIG, KEEPING STATE ")); Serial.println(fan_state);
       #endif
       new_state = fan_state;
     }    
@@ -103,7 +111,7 @@ static void updatePWMvalues() {
       new_state = nohyst_state;       
     } else {
       #if (DEBUG>2)
-        Serial.print(F("HYST UP TRIG, KEEPING STATE ")); Serial.println(fan_state);
+        Serial.print(F(" HYST UP TRIG, KEEPING STATE ")); Serial.println(fan_state);
       #endif
       new_state = fan_state;
     }  
@@ -111,7 +119,7 @@ static void updatePWMvalues() {
     new_state = nohyst_state;                                   // too far, no need to check hyst
   }
   #if (DEBUG>1)
-    Serial.print("NOHYST state: "); Serial.print(nohyst_state);
+    Serial.print(" NOHYST state: "); Serial.print(nohyst_state);
     Serial.print(" | NEW state: "); Serial.print(new_state);
     Serial.print(" | FAN state: "); Serial.println(fan_state);
   #endif
@@ -127,7 +135,7 @@ static void updatePWMvalues() {
 //  }  
   cycle = pwm_vals[new_state];
   #if (DEBUG>1)
-    Serial.print(F("PWM value for temp ")); Serial.print(temp);
+    Serial.print(F(" PWM value for temp ")); Serial.print(temp);
     Serial.print(F(" calculated as ")); Serial.println(cycle);
   #endif
 
@@ -137,14 +145,14 @@ static void updatePWMvalues() {
 
 static void fanCtrlAlarmCheck() {
   #if (DEBUG>1)
-    Serial.print(F("Checking fan RPMs for alarms: ")); printBits(FANCTRL_ACTFANS); Serial.println("");
+    Serial.print(F(" Checking fan alarms (active): ")); printBits(FANCTRL_ACTFANS); Serial.println("");
   #endif
-  for (uint8_t i=0; i<FANARR_SIZE;++i) {
+  for (uint8_t i=0; i<FANARR_SIZE; ++i) {
     if (fanrpms[i]<FANCTRL_ALARMRPM && fan_state != 0 && (FANCTRL_ACTFANS & (1<<i))) {
       ++fanFailScores[i];
       #if (DEBUG>2)
-        Serial.print(F("Fan RPM check FAIL: ")); Serial.print(i); bl(); Serial.print(fanrpms[i]); br(); 
-        bl(); Serial.print(fanFailScores[i]); br(); Serial.println("");
+        Serial.print(F("  Check FAIL (fan|rpm|cnt): ")); Serial.print(i); vline();
+        Serial.print(fanrpms[i]); vline(); Serial.print(fanFailScores[i]); Serial.println("");
       #endif
       if (fanFailScores[i] > FANCTRL_FAILTHR) {
         declareError(FCTRL_RPMTOOLOW);
@@ -158,7 +166,7 @@ static void fanCtrlAlarmCheck() {
 
 static void setFansToMax() {
   #if (DEBUG>1)
-    Serial.println(F("Setting fans to MAX"));
+    Serial.println(F(" Setting timer1 PWMs to MAX"));
   #endif
   analogWriteT1Raw(TIMER1_A_PIN,t1_topcnt);
   analogWriteT1Raw(TIMER1_B_PIN,t1_topcnt);
@@ -166,7 +174,7 @@ static void setFansToMax() {
 
 static void setFansToPWM() {
   #if (DEBUG>1)
-    Serial.println(F("Updating timer1 PWMs"));
+    Serial.println(F(" Updating timer1 PWMs"));
   #endif
   analogWriteT1(TIMER1_A_PIN, t1_pwm_a);
   analogWriteT1(TIMER1_B_PIN, t1_pwm_b);
@@ -212,14 +220,14 @@ static void setFanPower(bool state) {
 
 static void disableFanPower() {
   #if (DEBUG>1)
-    Serial.println("Depowering fans");
+    Serial.println(" Fan power OFF");
   #endif
   FANCTRL_SW_PORT &= ~FANCTRL_SW_PIN;
 }
 
 static void enableFanPower() {
   #if (DEBUG>1)
-    Serial.println("Powering up fans");
+    Serial.println(" Fan power ON");
   #endif
   FANCTRL_SW_PORT |= FANCTRL_SW_PIN;
 }

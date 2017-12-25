@@ -17,7 +17,7 @@ static void setupLCD() {
 
 static inline void setManualLCDMode() {
   #if (DEBUG>1)
-    Serial.println(F("Setting manual LCD mode"));
+    Serial.println(F(" Setting LCD to manual"));
   #endif
   setLED_manualmode();
   GUIrotation = true;
@@ -25,22 +25,19 @@ static inline void setManualLCDMode() {
   GUIstate_toplim = 9;
   GUIstate_botlim = 6;
   GUIstate = 6;
-  GUItime_old = micros();
   GUI_update_required = true;
 }
 
 static inline void setNormalLCDMode() {
   #if (DEBUG>1)
-    Serial.println(F("Setting normal LCD mode"));
+    Serial.println(F(" Setting LCd to normal"));
   #endif
-  // Normal mode
   setLED_normal();
   GUIrotation = true;
   GUItimeout = true;
   GUIstate_toplim = 5;
   GUIstate_botlim = 0;
   GUIstate = 0;
-  GUItime_old = micros();
   GUI_update_required = true;
 }
 
@@ -54,40 +51,18 @@ static inline void manualGUIreset() {
 
 static void GUIloop() {  
   #if (DEBUG>1)
-    Serial.println(F("Entering GUI loop"));
+    Serial.println(F(" Entering GUI loop"));
   #endif
-  if (GUImode_changed) {
-    if (GUImode) {
-      setManualLCDMode();
-    } else {
-      setNormalLCDMode();
-    }
-    GUImode_changed = false;
-  }
   uint32_t GUItime = micros();
-  // Do GUI loop 
-  if (GUIrotation && LCDstate && (GUItime - GUItime_old > LCD_ROTTIME)) {
-    GUItime_old = GUItime;    
-    if (!GUIrotation_skipnext) {
-      GUI_update_required = true; 
-      setNextGUIState();    
-      #if (DEBUG>2)
-        Serial.print(F("Doing GUI rotation to ")); Serial.println(GUIstate); 
-      #endif
-    } else { 
-      #if (DEBUG>2)
-        Serial.println(F("Skipping 1 GUI rotation")); 
-      #endif 
-      GUIrotation_skipnext = false;
-    }    
-  }    
+  
   // LCD timeout
+  cli();
   if (GUItimeout && (GUItime - lastButtonTime > LCD_TIMEOUT) && (GUItime - lastEncoderTime > LCD_TIMEOUT)) { 
     if (LCDstate) {
       lcd.off();
       LCDstate = 0; 
       #if (DEBUG>1)
-        Serial.println(F("LCD OFF"));
+        Serial.println(F(" LCD OFF"));
       #endif
     }
   } else {
@@ -95,32 +70,65 @@ static void GUIloop() {
       lcd.on();
       LCDstate = 1;
       #if (DEBUG>1)
-        Serial.println(F("LCD ON"));
+        Serial.println(F(" LCD ON"));
       #endif
     }
+  }
+  sei();
+
+  // GUI mode
+  cli();
+  if (GUImode_changed) {
+    if (GUImode) {
+      setManualLCDMode();
+    } else {
+      setNormalLCDMode();
+    }
+    // Have to update time here to avoid passing things to funcs
+    GUItime_old = GUItime;
+    GUImode_changed = false;
   }  
+  sei();
+  
+  // Do GUI loop 
+  if (GUIrotation && LCDstate && (GUItime - GUItime_old > LCD_ROTTIME)) {
+    GUItime_old = GUItime;    
+    if (!GUIrotation_skipnext) {
+      GUI_update_required = true; 
+      setNextGUIState();    
+      #if (DEBUG>2)
+        Serial.print(F(" Rotating GUI to menu ")); Serial.println(GUIstate); 
+      #endif
+    } else { 
+      #if (DEBUG>2)
+        Serial.println(F(" Skipping 1 GUI rotation")); 
+      #endif 
+      GUIrotation_skipnext = false;
+    }    
+  }    
+  
   // GUI update
   if (GUI_update_required) { 
     #if (DEBUG>1)
-      Serial.print(F("GUI UPDATE - "));                    Serial.print(GUItime);     Serial.print(" | ");
+      Serial.print(F(" GUI upd reqd - "));                    Serial.print(GUItime);     Serial.print(" | ");
       Serial.print(encoder_down); Serial.print(" | ");  Serial.print(button_down); Serial.print(" | ");    
       Serial.println("");
     #endif
     #if (DEBUG>1)
-    if (button_down) {   
-      #if (DEBUG>1)   
-        Serial.println(F("BUTTON DOWN UPDATE"));
-      #endif
-      //selectState = !selectState;
-      //button_down = false;
-    }
-    if (encoder_down) {
-      #if (DEBUG>1)
-        Serial.println(F("ENCODER DOWN UPDATE"));
-      #endif
-      //selectState = !selectState;
-      //encoder_down = false;
-    }  
+      if (button_down) {   
+        #if (DEBUG>1)   
+          Serial.println(F(" Btn down upd"));
+        #endif
+        //selectState = !selectState;
+        //button_down = false;
+      }
+      if (encoder_down) {
+        #if (DEBUG>1)
+          Serial.println(F(" Enc down update"));
+        #endif
+        //selectState = !selectState;
+        //encoder_down = false;
+      }  
     #endif
 //    if (GUIstate_old != GUIstate) {
 //      GUIstate_old = GUIstate;
@@ -135,13 +143,13 @@ static void GUIloop() {
     #endif
     drawGUI(); 
     #if (DEBUG>2)
-      Serial.print("DRAW TIME - "); Serial.println(micros() - t1);
+      Serial.print(" Draw time - "); Serial.println(micros() - t1);
     #endif
     GUI_update_required = false;
     GUI_immediateupdreqd = false;
   } else {
     #if (DEBUG>1)
-      Serial.println(F("No GUI updt reqd"));
+      Serial.println(F(" GUI loop end - no updt reqd"));
     #endif
   }
 }
@@ -172,13 +180,14 @@ static inline void drawFatalErrorScreen() {
 
 static void drawGUI() { 
   #if (DEBUG>2)
-    Serial.print("DRAW GUI call: "); Serial.println(GUIstate);
+    Serial.print(" Draw GUI state: "); Serial.println(GUIstate);
   #endif 
-  lcd.setCursor(0,0);
-  lcd.print("                 "); 
-  lcd.setCursor(0,1);
-  lcd.print("                 ");
-  lcd.setCursor(0,0);
+//  lcd.setCursor(0,0);
+//  lcd.print("                 "); 
+//  lcd.setCursor(0,1);
+//  lcd.print("                 ");
+//  lcd.setCursor(0,0);
+  lcd.clear();
   switch(GUIstate) {
     case 0:
       lcd.print(" 1:"); lcd.print(fanrpms[0]);

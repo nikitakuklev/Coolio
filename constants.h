@@ -11,7 +11,7 @@
 #ifdef DEBUG
 #undef DEBUG
 #endif
-#define DEBUG 0
+#define DEBUG 3
 // 1 - general debug
 // 2 - trace
 // 3 - trace more
@@ -23,15 +23,15 @@
 // LOOP TIMINGS
 // I am using prime times to spread out routines, increasing responsiveness
 #define LOOP_TEMP_UPDT    4999
-#define LOOP_FANCTRL_UPDT 1999
+#define LOOP_FANCTRL_UPDT 2999
 #define LOOP_TACH_UPDT    7919      // prime 1000
-#define LOOP_GUI_UPDT     2000
+#define LOOP_GUI_UPDT     3000
 #define LOOP_LED_UPDT     200
 #define LOOP_ADC_UPDT     15117
 
 // EEPROM
 #define EEPROM_SIG        0x01      // aka version, eeprom will be cleared if this doesn't match
-#define EEPROM_SVDELAY    30000
+#define EEPROM_SVDELAY    300000
 
 // I2C COMMON
 //also need to change in SI2C library because #cpp translation units b/s
@@ -44,8 +44,8 @@
 #define SDA_PIN         4
 #define SDA_PORT        PORTB
 #define I2C_FASTMODE    0
-#define I2C_SLOWMODE    1
-#define I2C_NOINTERRUPT 0
+#define I2C_SLOWMODE    0
+#define I2C_NOINTERRUPT 1
 #define I2C_TIMEOUT     100
 #include <SoftI2CMaster.h>
 
@@ -98,15 +98,15 @@
 #define ENC_DATAPORT    PORTC
 #define ENC_DATADDR     DDRC
 #define ENC_DATAPIN     B00010000       //A4
-#define ENC_DATAPINRG   PINC
+#define ENC_DATAPINREG  PINC
 #define ENC_BTNPORT     PORTD
 #define ENC_BTNDDR      DDRD
 #define ENC_BTNPIN      B00001000       //INT1, D3
-#define ENC_ENCDB       1000
-#define ENC_BTNDB       50000
+#define ENC_ENCDB       1000            //Encoder debounce in us
+#define ENC_BTNDB       50000           //Button debounce in us
 
 // ADC
-#define FAKE_ADC_OUTPUT 0
+#define FAKE_ADC_OUTPUT 1
 #define ADC_VPIN        7               //A7
 #define ADC_IPIN        6               //A6
 

@@ -23,7 +23,7 @@ static void updatePowerData() {
   }
   #if FAKE_ADC_OUTPUT
     #if (DEBUG)
-      Serial.println("Running ADC update (fake)");
+      Serial.println(" Starting ADC update (fake)");
     #endif    
     setADCPin(ADC_VPIN);
     uint16_t V = 485;   
@@ -31,7 +31,7 @@ static void updatePowerData() {
     uint16_t I = 403;
   #else
     #if (DEBUG)
-      Serial.println("Running ADC update");
+      Serial.println(" Starting ADC update");
     #endif 
     setADCPin(ADC_VPIN);
     uint16_t V = getADCValue();
@@ -42,7 +42,7 @@ static void updatePowerData() {
   fan_current = (I*5)/1023.0;
   fan_power = fan_voltage*fan_current;
   #if (DEBUG > 1)
-    Serial.print("Fan power: V="); Serial.print(fan_voltage); bl(); Serial.print(V); br();
+    Serial.print(" Fan power: V="); Serial.print(fan_voltage); bl(); Serial.print(V); br();
     Serial.print(" | I="); Serial.print(fan_current); bl(); Serial.print(I); br();
     Serial.print(" | P="); Serial.println(fan_power);
   #endif
@@ -51,7 +51,7 @@ static void updatePowerData() {
 
 static inline void enableADC() {
   #if (DEBUG > 2)
-    Serial.println("Enabling ADC");
+    Serial.println(" Enabling ADC");
   #endif
   noInterrupts();
   ADCSRA |= _BV(ADEN);                                // Enable the ADC  
@@ -61,7 +61,7 @@ static inline void enableADC() {
 
 static inline void disableADC() {
   #if (DEBUG > 2)
-    Serial.println("Disabling ADC");
+    Serial.println(" Disabling ADC");
   #endif
   noInterrupts();
   ADMUX   = _BV(REFS0) | 0x0F;                        // Select AVcc reference, ground channel
@@ -73,6 +73,9 @@ static inline void disableADC() {
 }
 
 static double getChipTemperature() {
+  #if (DEBUG>1)
+    Serial.println(F(" Getting CHIP temp"));
+  #endif
   // Internal temperature has to be used with the internal reference of 1.1V
   ADCSRA &= ~_BV(ADEN);                               // Disable the ADC
   ADMUX   = _BV(REFS1) | _BV(REFS0) | _BV(MUX3);      // Select 1.1V internal reference and temperature channel
@@ -80,7 +83,10 @@ static double getChipTemperature() {
   ADCSRA |= _BV(ADIF);                                // Clear interrupt flag
 
   ADCSRA |= _BV(ADEN);                   // Enable the ADC
-  delay(5);                              // Internal bandgap reference needs time to become stable
+  //delay(5);                              // Internal bandgap reference needs time to become stable
+  uint32_t currentTime = micros();
+  while (micros() - currentTime < 5000);
+  
   ADCSRA |= _BV(ADSC);                   // Start the ADC  
   while (bit_is_set(ADCSRA,ADSC));       // Detect end-of-conversion 
   ADCSRA |= _BV(ADSC);                   // Start second run (for accuracy)
@@ -94,7 +100,7 @@ static double getChipTemperature() {
 static uint16_t getADCValue() {
   if (bit_is_set(ADCSRA,ADEN)) {
     #if (DEBUG > 2)
-      Serial.println(F("Running ADC conversion"));
+      Serial.println(F(" Getting ADC value"));
     #endif
     //while (bit_is_set(ADCSRA,ADSC));  // If conversion in progress, wait
     ADCSRA |= _BV(ADSC);                // Start the ADC
@@ -109,7 +115,7 @@ static uint16_t getADCValue() {
 
 static void adcAlarmCheck() {
   #if (DEBUG > 2)
-    Serial.println(F("ADC alarm check"));
+    Serial.println(F(" ADC alarm check"));
   #endif
   if (fan_voltage < ADC_V_LOWALARM) {
     declareError(ADC_VTOOLOW);
@@ -122,7 +128,7 @@ static void adcAlarmCheck() {
 
 static void setADCPin(uint8_t pin) {
   #if (DEBUG > 2)
-    Serial.print(F("ADC pin set to ")); Serial.println(pin); 
+    Serial.print(F(" ADC pin set to ")); Serial.println(pin); 
   #endif
   if (pin <= 7) {
     ADMUX = _BV(REFS0) | (pin & 0x07);                // Select AVcc reference+set pin select
