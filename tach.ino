@@ -16,6 +16,9 @@ static void setupTach() {
 }
 
 static void doTachRun(unsigned long timeout) {
+  if (fan_state == 0) {
+    
+  }
   //stop PWM and bring pins high 
   noInterrupts();
   stopTimer1(); 

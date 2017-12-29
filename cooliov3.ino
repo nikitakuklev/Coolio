@@ -281,14 +281,14 @@ void loop() {
   #endif
 
   // LED update
-//  if (main_time > led_update_time) {
-//    #if (DEBUG)
-//      Serial.println(F("LED UPD - TICK"));
-//      activity = true;
-//    #endif
-//    updateLED();
-//    led_update_time += LOOP_LED_UPDT;
-//  }
+  if (main_time > led_update_time) {
+    #if (DEBUG)
+      Serial.println(F("LED UPD - TICK"));
+      activity = true;
+    #endif
+    updateLED();
+    led_update_time += LOOP_LED_UPDT;
+  }
 
   if (cleanup) {
     tachCleanup();

@@ -11,7 +11,7 @@
 #ifdef DEBUG
 #undef DEBUG
 #endif
-#define DEBUG 3
+#define DEBUG 0
 // 1 - general debug
 // 2 - trace
 // 3 - trace more
@@ -106,7 +106,7 @@
 #define ENC_BTNDB       50000           //Button debounce in us
 
 // ADC
-#define FAKE_ADC_OUTPUT 1
+#define FAKE_ADC_OUTPUT 0
 #define ADC_VPIN        7               //A7
 #define ADC_IPIN        6               //A6
 
@@ -123,15 +123,17 @@
 #define FANCTRL_SW_PIN    B00000001 
 //#define FANCTRL_TEMP_BMRG 5
 #define FANCTRL_TEMP_HYST 2
-#define FANCTRL_TEMP_OFF  50
-#define FANCTRL_TEMP_BOT  70
-#define FANCTRL_TEMP_TOP  150
+#define FANCTRL_TEMP_OFF  30
+#define FANCTRL_TEMP_BOT  40
+#define FANCTRL_TEMP_TOP  120
 #define FANCTRL_MINCYCLE  8
 #define FANCTRL_MAXCYCLE  100
 #define FANCTRL_WARNRPM   300
 #define FANCTRL_ALARMRPM  200
-#define FANCTRL_ACTFANS   B01111111
-#define FANCTRL_ACTFANSN  7
+//#define FANCTRL_ACTFANS   B01111111
+//#define FANCTRL_ACTFANSN  7
+#define FANCTRL_ACTFANS   B00000001
+#define FANCTRL_ACTFANSN  1
 #define FANCTRL_FAILTHR   20
 
 #if ((FANCTRL_TEMP_TOP - FANCTRL_TEMP_BOT) > 255)
