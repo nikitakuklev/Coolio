@@ -100,6 +100,7 @@ static LiquidCrystal_SI2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);
 #endif
 
 //*****************************************
+Log logger;
 
 void setup() {
   #ifdef DEBUG  
@@ -210,13 +211,14 @@ void loop() {
       GUI_immediateupdreqd = true;
     }
   }
+  
   if (spinup_required) {
     #if (DEBUG)
       Serial.println(F("SPINUP START"));
       activity = true;
     #endif
     setFansToMax();
-    delay(200);
+    delay(1000);
     setFansToPWM();
     spinup_required = false;
     #if (DEBUG)
@@ -282,9 +284,9 @@ void loop() {
 
   // LED update
   if (main_time > led_update_time) {
-    #if (DEBUG)
+    #if (DEBUG>2)
       Serial.println(F("LED UPD - TICK"));
-      activity = true;
+      #activity = true;
     #endif
     updateLED();
     led_update_time += LOOP_LED_UPDT;
@@ -424,7 +426,3 @@ void loop() {
 //  analogWriteT1(TIMER1_A_PIN,0);
 //  delay(60000);
 //}
-
-
-
-

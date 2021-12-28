@@ -14,7 +14,7 @@ static void declareError(uint8_t code) {
   updateStatusString();
   //systemCode = code;
   #if (DEBUG)
-    Serial.print("ERR "); Serial.print(systemCode,HEX); Serial.print(code,HEX); 
+    Serial.print("ERR "); Serial.print(systemCode,HEX); 
     Serial.print(": "); Serial.println(statusString);   
   #endif
   if (isFatal(code)) {
@@ -47,6 +47,7 @@ static void clearError() {
 
 static void updateStatusString() {
   memset(statusString,0,sizeof(char)*LCD_STATUSLEN);  
+  // Indexing by high byte of error code, and loading strings for code memory
   strcpy_P(statusString, (char*)pgm_read_word(&statusStringTable[systemCode>>4]));
   //strcpy_P(statusString, statusStringTable[systemCode>>4]);
   #if (DEBUG>2)
@@ -57,7 +58,7 @@ static void updateStatusString() {
 static void panic(uint8_t err) { 
   #if (DEBUG)
     Serial.println(F("PANIC TRIGGERED, HALTING"));
-    Serial.println(err,HEX);
+    Serial.print("Error code: "); Serial.println(err,HEX);
     delay(500);
   #endif 
   noInterrupts();
@@ -73,12 +74,12 @@ static void panic(uint8_t err) {
   #if HASLCD
     drawFatalErrorScreen();
   #endif
-  // Shutdown with no interrupts = permanently
   interrupts();
   #if (DEBUG)
     Serial.println(F("GOODBYE...")); 
   #endif
   delay(500);
+  // Shutdown with no interrupts = permanently
   noInterrupts();
   for(;;) { ; }
 //  set_sleep_mode(SLEEP_MODE_PWR_DOWN);  

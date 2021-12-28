@@ -74,7 +74,7 @@ static inline void disableADC() {
 
 static double getChipTemperature() {
   #if (DEBUG>1)
-    Serial.println(F(" Getting CHIP temp"));
+    logger.print(F(" Getting CHIP temp..."));
   #endif
   // Internal temperature has to be used with the internal reference of 1.1V
   ADCSRA &= ~_BV(ADEN);                               // Disable the ADC
@@ -94,6 +94,9 @@ static double getChipTemperature() {
   uint16_t wADC = ADCW;                  // Reading 'register' "ADCW" takes care of how to read ADCL and ADCH 
   double t = (wADC - 324.31 ) / 1.22;    // Offset of 324.31 could be wrong, just an indication 
   setADCPin(0xFF);                       // Set ADC back to external source
+  #if (DEBUG>1)
+    logger.println(F("OK"));
+  #endif
   return t;                              // The returned temperature is in degrees Celsius
 }
 

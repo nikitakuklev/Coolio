@@ -11,11 +11,23 @@
 #ifdef DEBUG
 #undef DEBUG
 #endif
-#define DEBUG 0
+#define DEBUG 2
 // 1 - general debug
 // 2 - trace
 // 3 - trace more
 // 4 - kill me
+
+// FUNCTION/CLASS PROTOTYPES
+class Log {
+  public:
+    static void println(String s, int level);
+    static void println(String s);
+    static void println(__FlashStringHelper* s);
+    static void print(String s, int level);
+    static void print(String s);
+    static void print(__FlashStringHelper* s);
+};
+
 
 // MACROS
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
@@ -68,6 +80,11 @@
 #define LED_RED_DDR       DDRB
 #define LED_RED_PIN       B00100000 
 #define LED_BLINK_PERIOD  600
+#define LED_OFF           0
+#define LED_ON            1
+#define LED_BLINK_SLOW    2
+#define LED_FLASH         3
+#define LED_DBLFLASH      4
 
 // TEMPERATURE SENSOR
 #define FAKE_TEMP_OUTPUT  0
@@ -123,13 +140,13 @@
 #define FANCTRL_SW_PIN    B00000001 
 //#define FANCTRL_TEMP_BMRG 5
 #define FANCTRL_TEMP_HYST 2
-#define FANCTRL_TEMP_OFF  30
-#define FANCTRL_TEMP_BOT  40
-#define FANCTRL_TEMP_TOP  120
-#define FANCTRL_MINCYCLE  8
+#define FANCTRL_TEMP_OFF  25
+#define FANCTRL_TEMP_BOT  30
+#define FANCTRL_TEMP_TOP  60
+#define FANCTRL_MINCYCLE  15
 #define FANCTRL_MAXCYCLE  100
 #define FANCTRL_WARNRPM   300
-#define FANCTRL_ALARMRPM  200
+#define FANCTRL_ALARMRPM  100
 //#define FANCTRL_ACTFANS   B01111111
 //#define FANCTRL_ACTFANSN  7
 #define FANCTRL_ACTFANS   B00000001
@@ -170,7 +187,7 @@
 #define TEMP_CHIP_MIN      -39.0
 #define TEMP_CHIP_WARN      60.0
 #define TEMP_CHIP_ALARM     70.0
-#define ADC_V_LOWALARM      4.0
+#define ADC_V_LOWALARM      3.8
 #define ADC_V_HIGHALARM     14.0
 #define ADC_I_ALARM         3.0
 

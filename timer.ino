@@ -24,7 +24,7 @@ static void analogWriteT1Raw(uint8_t pin, uint16_t value) {
     }
     #if (DEBUG > 1)
       Serial.print(" Timer 1 raw: pin "); Serial.print(pin);
-      Serial.print(" set to value "); Serial.println(value);
+      Serial.print(" set to "); Serial.println(value);
     #endif
   }
 }
@@ -40,8 +40,8 @@ static void analogWriteT1(uint8_t pin, uint32_t value) {
     uint16_t valueraw;
     valueraw = (uint16_t)((value*t1_topcnt)/100);
     #if (DEBUG)
-      Serial.print(" Timer 1 - rel value "); Serial.print(value); 
-      Serial.print(" passed on as raw "); Serial.println(valueraw); 
+      Serial.print(F(" Timer 1 - rel% ")); Serial.print(value); 
+      Serial.print(F(" passed as raw ")); Serial.println(valueraw); 
     #endif
     analogWriteT1Raw(pin,valueraw);
 //    switch (pin) {

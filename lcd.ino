@@ -243,7 +243,7 @@ static void drawGUI() {
       break;
     case 10:
       lcd.print(systemCode,HEX);lcd.print(exitCode,HEX);lcd.print("|"); lcd.print(statusString);    
-      lcd.setCursor(0,1);lcd.print(fan_state);lcd.print("|");lcd.print(temp_IR);lcd.print(temp_sensor);
+      lcd.setCursor(0,1);lcd.print(fan_state);lcd.print("|");lcd.print(temp_IR);lcd.print("|");lcd.print(temp_sensor);
       break;
     default:
       lcd.setCursor(3,0);   lcd.print("__G U I__");       

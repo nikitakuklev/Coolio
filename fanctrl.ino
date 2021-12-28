@@ -150,7 +150,7 @@ static void fanCtrlAlarmCheck() {
   for (uint8_t i=0; i<FANARR_SIZE; ++i) {
     if (fanrpms[i]<FANCTRL_ALARMRPM && fan_state != 0 && (FANCTRL_ACTFANS & (1<<i))) {
       ++fanFailScores[i];
-      #if (DEBUG>2)
+      #if (DEBUG>1)
         Serial.print(F("  Check FAIL (fan|rpm|cnt): ")); Serial.print(i); vline();
         Serial.print(fanrpms[i]); vline(); Serial.print(fanFailScores[i]); Serial.println("");
       #endif
@@ -231,4 +231,3 @@ static void enableFanPower() {
   #endif
   FANCTRL_SW_PORT |= FANCTRL_SW_PIN;
 }
-
