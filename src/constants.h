@@ -6,7 +6,7 @@
 #include <avr/sleep.h>
 #include <avr/eeprom.h>
 #include <inttypes.h>
-#include "Arduino.h"
+#include <Arduino.h>
 
 #ifdef DEBUG
 #undef DEBUG
@@ -63,7 +63,9 @@ class Log {
 #define I2C_SLOWMODE    0
 #define I2C_NOINTERRUPT 1
 #define I2C_TIMEOUT     100
-#include <SoftI2CMaster.h>
+//#include <SoftI2CMaster.h>
+#include <SoftWire.h>
+
 
 // LCD
 #define HASLCD          1
@@ -76,7 +78,9 @@ class Log {
 #define BLANK_4CHAR     "    "
 // Note that library was modified to not include asm twice
 // Otherwise linker would complain loudly...
-#include <LiquidCrystal_SI2C.h>
+//#include <LiquidCrystal_SI2C.h>
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 
 // GUI
 #define GUI_AUTO        0

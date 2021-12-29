@@ -1,3 +1,4 @@
+
 #include "constants.h"
 
 // General
@@ -101,7 +102,8 @@ volatile bool encoder_down;
 //const char pad[500] PROGMEM = { 0 };
 
 #if HASLCD
-static LiquidCrystal_SI2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+//static LiquidCrystal_SI2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+hd44780_I2Cexp lcd(0x3F, I2Cexp_PCF8574, 2, 1, 0, 4, 5, 6, 7, 3, HIGH);
 #endif
 
 //*****************************************
@@ -128,6 +130,9 @@ void setup() {
   //setup_test_IR_PWM_TACH_LCD();
   //setup_test_IR_PWM_TACH_LCD_ENC();
   //setup_test_IR_PWM_TACH_LCD_ENC_LED();
+
+  SoftWire Wire = SoftWire();
+
   restoreEEPROMvals();
   setupLED();
   #if HASLCD
