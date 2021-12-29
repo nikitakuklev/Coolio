@@ -13,102 +13,86 @@ static void setupLCD() {
   GUItime_old = micros();
   GUIstate_old = 255;
   LCDstate = 1;
+  LCD_update_period = LOOP_GUI_UPDT;
+  createBarChars();
 }
 
-static inline void setManualLCDMode() {
-  #if (DEBUG>1)
-    Serial.println(F(" Setting LCD to manual"));
-  #endif
-  setLED_manualmode();
-  GUIrotation = true;
-  GUItimeout = true;
-  GUIstate_toplim = 9;
-  GUIstate_botlim = 6;
-  GUIstate = 6;
-  GUI_update_required = true;
-}
-
-static inline void setNormalLCDMode() {
-  #if (DEBUG>1)
-    Serial.println(F(" Setting LCd to normal"));
-  #endif
-  setLED_normal();
-  GUIrotation = true;
-  GUItimeout = true;
-  GUIstate_toplim = 5;
-  GUIstate_botlim = 0;
-  GUIstate = 0;
-  GUI_update_required = true;
-}
-
-static inline void manualGUIreset() {
-  if (GUImode) {
-    // Back to start screen
-    GUIstate = 6;
-    GUItime_old = micros();
+static void createBarChars() {
+  byte mask = 0x10;
+  byte current=0;
+  for (int cgchar=1; cgchar<=4; cgchar++) {
+    current |= mask;
+    mask=mask>>1;
+    for (int i=0; i<8; i++){
+      LCD_character_array[i]=current;
+    }
+    lcd.createChar(cgchar, LCD_character_array);
   }
+  for (int i=0; i<8; i++) {
+    LCD_character_array[i]=0x1f; // Create full block.
+  }
+  lcd.createChar(0, LCD_character_array);
 }
 
-static void GUIloop() {  
-  #if (DEBUG>1)
-    Serial.println(F(" Entering GUI loop"));
-  #endif
+static void updateLCD() {
   uint32_t GUItime = micros();
-  
-  // LCD timeout
-  cli();
+
+  // LCD timeout  
   if (GUItimeout && (GUItime - lastButtonTime > LCD_TIMEOUT) && (GUItime - lastEncoderTime > LCD_TIMEOUT)) { 
     if (LCDstate) {
+      cli();
       lcd.off();
-      LCDstate = 0; 
+      sei();
+      LCDstate = LCD_OFF; 
       #if (DEBUG>1)
         Serial.println(F(" LCD OFF"));
       #endif
     }
   } else {
     if (!LCDstate) {
+      cli();
       lcd.on();
-      LCDstate = 1;
+      sei();
+      LCDstate = LCD_ON;
       #if (DEBUG>1)
         Serial.println(F(" LCD ON"));
       #endif
     }
   }
-  sei();
+    
+  // Rotate screen
+  if (LCDstate == LCD_ON) {
+    if (GUIrotation && (GUItime - GUItime_old > LCD_ROTTIME)) {
+      GUItime_old = GUItime;    
+      if (!GUIrotation_skipnext) {
+        GUI_update_required = true; 
+        if (GUImode == GUI_DUMB) {
+          setDefaultGUIState();
+          #if (DEBUG>2)
+            Serial.print(F(" Defaulting GUI to menu ")); Serial.println(GUIstate); 
+          #endif
+        } else {
+          setNextGUIState();
+          #if (DEBUG>2)
+            Serial.print(F(" Rotating GUI to menu ")); Serial.println(GUIstate); 
+          #endif
+        }
+            
 
-  // GUI mode
-  cli();
-  if (GUImode_changed) {
-    if (GUImode) {
-      setManualLCDMode();
-    } else {
-      setNormalLCDMode();
-    }
-    // Have to update time here to avoid passing things to funcs
-    GUItime_old = GUItime;
-    GUImode_changed = false;
-  }  
-  sei();
-  
-  // Do GUI loop 
-  if (GUIrotation && LCDstate && (GUItime - GUItime_old > LCD_ROTTIME)) {
-    GUItime_old = GUItime;    
-    if (!GUIrotation_skipnext) {
-      GUI_update_required = true; 
-      setNextGUIState();    
-      #if (DEBUG>2)
-        Serial.print(F(" Rotating GUI to menu ")); Serial.println(GUIstate); 
-      #endif
-    } else { 
-      #if (DEBUG>2)
-        Serial.println(F(" Skipping 1 GUI rotation")); 
-      #endif 
-      GUIrotation_skipnext = false;
-    }    
+      } else { 
+        #if (DEBUG>2)
+          Serial.println(F(" Skipping 1 GUI rotation")); 
+        #endif 
+        GUIrotation_skipnext = false;
+      } 
+    }   
   }    
   
   // GUI update
   if (GUI_update_required) { 
+    if (LCDstate != LCD_ON) {
+      panic(100);
+    }
     #if (DEBUG>1)
       Serial.print(F(" GUI upd reqd - "));                    Serial.print(GUItime);     Serial.print(" | ");
       Serial.print(encoder_down); Serial.print(" | ");  Serial.print(button_down); Serial.print(" | ");    
@@ -146,11 +130,19 @@ static void GUIloop() {
       Serial.print(" Draw time - "); Serial.println(micros() - t1);
     #endif
     GUI_update_required = false;
-    GUI_immediateupdreqd = false;
+    GUI_immediate_update = false;
   } else {
     #if (DEBUG>1)
       Serial.println(F(" GUI loop end - no updt reqd"));
     #endif
+  }
+}
+
+static inline void manualGUIreset() {
+  if (GUImode == GUI_MANUAL) {
+    // Back to start screen
+    GUIstate = 6;
+    GUItime_old = micros();
   }
 }
 
@@ -171,11 +163,36 @@ static inline void setPrevGUIState() {
   }
 }
 
+static inline void setDefaultGUIState() {
+  GUIstate = GUIstate_botlim;
+}
+
 static inline void drawFatalErrorScreen() {
   GUIrotation = GUItimeout = false;
-  lcd.on(); lcd.setBacklight(HIGH);
+  lcd.on();
+  lcd.setBacklight(HIGH);
   GUIstate = 10;
   drawGUI();
+}
+
+// From https://www.best-microcontroller-projects.com/hitachi-hd44780.html
+static inline void drawBar(byte x, byte y, byte pixels) {
+  int i;
+  byte blocks = pixels / 5; // 5 pixels wide per character.
+  byte rem    = pixels % 5;
+  for (i=0;i<blocks;i++) {
+     lcd.setCursor(x+i,y);
+     lcd.write(byte(0));
+  }
+  lcd.setCursor(x+i,y);
+  if (rem!=0) {
+      lcd.write(rem);
+  }
+}
+
+static inline void drawBarPercent(uint8_t x, uint8_t y, uint8_t width, uint8_t percent) {
+  uint8_t pixels = width * 5 * percent;
+  drawBar(x, y, pixels);
 }
 
 static void drawGUI() { 
@@ -220,7 +237,7 @@ static void drawGUI() {
       lcd.setCursor(0,1);   lcd.print("LS:"); lcd.print(lastErrorString);
       break;
     case 6:
-      lcd.setCursor(2,0);   lcd.print("MANUAL  MODE");       
+      lcd.setCursor(2,0);   lcd.print("MANUAL "); lcd.print(" MODE");       
       //lcd.setCursor(0,1);   lcd.print("PWM:"); lcd.print(BLANK_3CHAR); lcd.setCursor(4,1); lcd.print(t1_pwm_a);
       //lcd.setCursor(8,1);   lcd.print("RPM:"); lcd.print(BLANK_4CHAR); lcd.setCursor(12,1); lcd.print(fanrpmavg);
       lcd.setCursor(0,1);   lcd.print("PWM:"); lcd.print(t1_pwm_a);
@@ -244,6 +261,24 @@ static void drawGUI() {
     case 10:
       lcd.print(systemCode,HEX);lcd.print(exitCode,HEX);lcd.print("|"); lcd.print(statusString);    
       lcd.setCursor(0,1);lcd.print(fan_state);lcd.print("|");lcd.print(temp_IR);lcd.print("|");lcd.print(temp_sensor);
+      break;
+    case 11:
+      lcd.print("D T:"); lcd.print(temp_IR); lcd.print(" P:"); lcd.print(t1_pwm_a);
+      uint8_t temp_percent;
+      if (temp_IR > FANCTRL_TEMP_TOP) {
+        temp_percent = 80;
+      } else if (temp_IR < 0) {
+        temp_percent = 0;
+      } else {
+        temp_percent = (uint8_t) 5 * 16 * temp_IR / FANCTRL_TEMP_TOP;
+      }    
+      #if (DEBUG>2)
+        Serial.print(" Dumb temp pix of 80: "); Serial.println(temp_percent);
+      #endif 
+      drawBar(0,1,temp_percent);
+      break;
+    case 12:
+      lcd.print("DUMB PWM:"); lcd.print(t1_pwm_a);
       break;
     default:
       lcd.setCursor(3,0);   lcd.print("__G U I__");       

@@ -5,20 +5,27 @@
 // Debounce is performed by only accepting rising edge after some debounce delay.
 
 // Inside ISR, don't need to manage interrupts - this is a bit faster vs stock arduino
-//unsigned long micros_fast() {
-//  unsigned long m;
-//  uint8_t t;
-//  
+// Original source in hardware/arduino/avr/cores/arduino/wiring.c
+// But from here, maybe unnecessary: https://forum.arduino.cc/t/accessing-tick-counter/316296
+
+//extern volatile unsigned long timer0_overflow_count;
+//inline unsigned long micros_fast() {
+//  unsigned long m;  
+//  uint8_t oldSREG = SREG, t;
+//   
 //  m = timer0_overflow_count;
 //  t = TCNT0;
+//
 //  if ((TIFR0 & _BV(TOV0)) && (t < 255))
-//    m++;
-//  
+//      m++;
+//
+//  SREG = oldSREG;
+//   
 //  return ((m << 8) + t) * (64 / clockCyclesPerMicrosecond());
 //}
 
 ISR (INT0_vect) {
-  static bool stage = true;  
+  static bool stage = true;  // true=not triggered
   uint32_t timeNow = micros();
   //uint32_t deltat = timeNow - lastTrigTime;
   if (timeNow - lastEncoderTime > ENC_ENCDB) {  
@@ -39,7 +46,7 @@ ISR (INT0_vect) {
     // On rising clock edge, which indicates ending turn, measure data pin
     if (!stage) {
       GUI_update_required = true;   
-      GUI_immediateupdreqd = true;
+      GUI_immediate_update = true;
       #if (DEBUG>2)
         printBits(datapinreg); Serial.print("|");
         printBits(ENC_DATADDR);
@@ -54,41 +61,6 @@ ISR (INT0_vect) {
   }
 }
 
-static inline void encoderIncrement() {
-  #if (DEBUG>2)
-    Serial.println("EINC");
-  #endif
-  if (GUImode) {
-    // Increment pwm
-//    if (t1_pwm_a < FANCTRL_MAXCYCLE) {
-//      t1_pwm_a += 1;
-//      t1_pwm_b = t1_pwm_a;
-//    }
-    manualFanCtrlIncrement();
-    manualpwm_changed = true;
-  } else {
-    setNextGUIState();
-    GUIrotation_skipnext = true;
-  }
-}
-
-static inline void encoderDecrement() {
-  #if (DEBUG>2)
-    Serial.println("EDEC");
-  #endif
-  if (GUImode) {
-//    if (t1_pwm_a > FANCTRL_MINCYCLE) {
-//      t1_pwm_a -= 1;
-//      t1_pwm_b = t1_pwm_a;
-//    }
-    manualFanCtrlDecrement();
-    manualpwm_changed = true;
-  } else {
-    setPrevGUIState();
-    GUIrotation_skipnext = true;
-  }
-}
-
 static void setupEncoderEXTINT0() {
   #if (DEBUG)
     Serial.println(F("Setting up encoder"));
@@ -98,24 +70,26 @@ static void setupEncoderEXTINT0() {
   ENC_CLKPORT &= ~ENC_CLKPIN;                   // Disable pullups
   ENC_DATAPORT &= ~ENC_DATAPIN;
   //PORTD |= B10000100;                         // Enable pullups
-  EIMSK &= ~B00000001;                          // Disable INT0
+  EIMSK &= ~_BV(INT0);                          // Disable INT0
   EIFR |= _BV(INTF0);                           // Clear external interrupt 0 flag
-  EICRA |= _BV(ISC01); EICRA &= ~_BV(ISC00);    // ISC0 = 10 (falling on pin 0)
+  EICRA |= _BV(ISC01);                          // ISC0 = 10 (falling on pin 0)
+  EICRA &= ~_BV(ISC00);  
   //EICRA |= (_BV(ISC01) | _BV(ISC00));         // ISC0 = 11 (rising on pin 0)  
-
 }
+
 static inline void enableEncoderEXTINT0() {
   #if (DEBUG>2)
     Serial.println(F("Enabling encoder"));
   #endif
-  EIMSK |= B00000001;                   // Enable INT0
+  EIMSK |= _BV(INT0);                           // Enable INT0
   lastEncoderTime = micros();
 }
+
 static inline void disableEncoderEXTINT0() {
   #if (DEBUG>2)
     Serial.println(F("Disabling encoder"));
   #endif
-  EIMSK &= ~B00000001;                  // Disable INT0
+  EIMSK &= ~_BV(INT0);                          // Disable INT0
 }
 
 //****************************************************
@@ -139,7 +113,7 @@ ISR (INT1_vect) {
     if (is_btn_up) {  
       button_down = true;
       GUI_update_required = true;  
-      GUI_immediateupdreqd = true; 
+      GUI_immediate_update = true; 
       buttonDown();
     } else {
       button_down = false;
@@ -152,26 +126,13 @@ ISR (INT1_vect) {
   }
 }
 
-static inline void buttonDown() {
-  GUImode ^= 0x01;
-  GUImode_changed = true;
-  fan_mode_changed = true;
-  immediate_fan_updt_reqd = true;
-//  if(GUImode) {
-//    // Manual mode
-//    setManualLCDMode();
-//  } else {
-//    setNormalLCDMode();
-//  }
-}
-
 static void setupButtonEXTINT1() { 
   #if (DEBUG)
     Serial.println(F("Setting up button"));
   #endif
   ENC_BTNDDR &= ~ENC_BTNPIN;                  // Set port to input
   ENC_BTNPORT &= ~ENC_BTNPIN;                 // Disable pullups 
-  EIMSK &= ~B00000010;                        // Disable INT1
+  EIMSK &= ~_BV(INT1);                        // Disable INT1
   EICRA |= _BV(ISC11); EICRA &= ~_BV(ISC10);  // ISC1 = 10 (falling on INT 1)
   EIFR |= _BV(INTF1);                         // Clear external interrupt flag 1  
 }
@@ -180,7 +141,7 @@ static inline void enableButtonEXTINT1() {
   #if (DEBUG>2)
     Serial.println(F("Enabling button"));
   #endif
-  EIMSK |= B00000010;                         // Enable INT1
+  EIMSK |= _BV(INT1);                         // Enable INT1
   lastButtonTime = micros();
 }
 
@@ -188,7 +149,7 @@ static inline void disableButtonEXTINT1() {
   #if (DEBUG>2)
     Serial.println(F("Disabling button"));
   #endif
-  EIMSK &= ~B00000010;                        // Disable INT1
+  EIMSK &= ~_BV(INT1);                        // Disable INT1
 }
 //static inline void setButtonFallingEdge() {
 //  EICRA |= _BV(ISC11); EICRA &= ~_BV(ISC10);

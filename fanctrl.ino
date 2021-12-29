@@ -65,12 +65,14 @@ static inline void manualFanCtrlUpdate() {
 static inline void manualFanCtrlIncrement() {
   if (fan_state < FIMAX+1) {
     man_state = fan_state + 1;
+    manualpwm_changed = true;
   }
 }
 
 static inline void manualFanCtrlDecrement() {
   if (fan_state > 0) {
     man_state = fan_state - 1;
+    manualpwm_changed = true;
   }
 }
 

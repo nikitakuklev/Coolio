@@ -69,16 +69,21 @@ static uint32_t led_update_time;
 // LED
 static uint8_t led_green_state;
 static uint8_t led_red_state;
+static uint8_t led_green_counter;
+static uint8_t led_red_counter;
+volatile bool led_immediate_update = false;
 
 // GUI
 static uint8_t GUIstate = 0;
 volatile uint8_t GUImode = 0;           //0=normal, 1=manual
-volatile uint8_t GUImode_changed = false;
-volatile bool GUI_immediateupdreqd = false;
+volatile bool GUImode_changed = false;
+volatile bool GUI_immediate_update = false;
 static uint8_t GUIstate_old;
 static uint8_t GUIstate_toplim;
 static uint8_t GUIstate_botlim;
 static uint8_t LCDstate;
+byte LCD_character_array[8];
+static uint16_t LCD_update_period;
 
 static uint32_t GUItime_old = 0;
 volatile bool GUI_update_required;
@@ -115,7 +120,6 @@ void setup() {
     #endif
     delay(500);
   #endif 
-  
 
   //setup_test_IRsensor();
   //setup_test_IRandPWM();
@@ -128,12 +132,8 @@ void setup() {
   setupLED();
   #if HASLCD
     setupLCD();
-    if(GUImode) {
-      setManualLCDMode();
-    } else {
-      setNormalLCDMode();
-    }
   #endif  
+  setMode(GUImode);
   setupIRSensor();
   setupTimer1(TIMER1_DEF_FREQ);
   setupFanController();
@@ -176,11 +176,11 @@ void loop() {
   }
   
   // Fan control update
-  if (!GUImode) {
+  if (GUImode == GUI_AUTO) {
     // Automatic fan control
     if (main_time > fanctrl_update_time || immediate_fan_updt_reqd) {
       #if (DEBUG)
-        Serial.println(F("FANCTRL UPD"));
+        Serial.println(F("AUTO FC UPD"));
         activity = true;
       #endif   
       doFanCtrlUpdate();  
@@ -196,11 +196,11 @@ void loop() {
       }        
       immediate_fan_updt_reqd = false;
     } 
-  } else { 
+  } else if (GUImode == GUI_MANUAL) { 
     // If PWM target was modified by manual mode, need to adjust
     if (manualpwm_changed || immediate_fan_updt_reqd) {
       #if (DEBUG)
-        Serial.println(F("MAN FANCTRL UPD"));
+        Serial.println(F("MAN FC UPD"));
         activity = true;
       #endif      
       manualFanCtrlUpdate();
@@ -208,8 +208,21 @@ void loop() {
       manualpwm_changed = false;
       immediate_fan_updt_reqd = false;
       GUI_update_required = true;   
-      GUI_immediateupdreqd = true;
+      GUI_immediate_update = true;
     }
+  } else if (GUImode == GUI_DUMB) {
+    if (manualpwm_changed || immediate_fan_updt_reqd) {
+      #if (DEBUG)
+        Serial.println(F("DUMB FC UPD"));
+        activity = true;
+      #endif      
+      manualFanCtrlUpdate();
+      manualGUIreset();
+      manualpwm_changed = false;
+      immediate_fan_updt_reqd = false;
+      GUI_update_required = true;   
+      GUI_immediate_update = true;
+    } 
   }
   
   if (spinup_required) {
@@ -262,34 +275,37 @@ void loop() {
 //    }
 //  }
     
-  // GUI loop update
-  #if HASLCD
-    if (main_time > gui_update_time) { 
-      #if (DEBUG)
-        Serial.println(F("GUI UPD - TICK"));
-        activity = true;
-      #endif       
-      GUIloop();    
-      gui_update_time += LOOP_GUI_UPDT;
-    } else if (GUI_immediateupdreqd) {
-      #if (DEBUG)
-        Serial.println(F("GUI UPD - IMM"));
-        activity = true;
-      #endif
-      GUIloop();
-      gui_update_time += LOOP_GUI_UPDT;
-
-    }
-  #endif
+  // GUI loop update  
+  if (main_time > gui_update_time) { 
+    #if (GUI_DEBUG)
+      Serial.println(F("GUI UPD - TICK"));
+      activity = true;
+    #endif       
+    GUIloop();    
+    gui_update_time += LOOP_GUI_UPDT;
+  } else if (GUI_immediate_update) {
+    #if (GUI_DEBUG)
+      Serial.println(F("GUI UPD - IMM"));
+      activity = true;
+    #endif
+    GUIloop();
+    gui_update_time = main_time + LOOP_GUI_UPDT;
+    GUI_immediate_update = false;
+  }
 
   // LED update
-  if (main_time > led_update_time) {
-    #if (DEBUG>2)
+  if (main_time > led_update_time || led_immediate_update) {    
+    #if (LED_DEBUG>2)
       Serial.println(F("LED UPD - TICK"));
-      #activity = true;
+      activity = true;
     #endif
     updateLED();
-    led_update_time += LOOP_LED_UPDT;
+    if (led_immediate_update) {
+      led_immediate_update = false;
+      led_update_time = main_time + LOOP_LED_UPDT;
+    } else {
+      led_update_time += LOOP_LED_UPDT;
+    }
   }
 
   if (cleanup) {

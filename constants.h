@@ -11,11 +11,14 @@
 #ifdef DEBUG
 #undef DEBUG
 #endif
-#define DEBUG 2
+#define DEBUG 3
 // 1 - general debug
 // 2 - trace
 // 3 - trace more
 // 4 - kill me
+
+#define LED_DEBUG 1 //DEBUG
+#define GUI_DEBUG DEBUG
 
 // FUNCTION/CLASS PROTOTYPES
 class Log {
@@ -34,12 +37,13 @@ class Log {
 
 // LOOP TIMINGS
 // I am using prime times to spread out routines, increasing responsiveness
-#define LOOP_TEMP_UPDT    4999
-#define LOOP_FANCTRL_UPDT 2999
-#define LOOP_TACH_UPDT    7919      // prime 1000
-#define LOOP_GUI_UPDT     3000
-#define LOOP_LED_UPDT     200
-#define LOOP_ADC_UPDT     15117
+#define LOOP_TEMP_UPDT      3999
+#define LOOP_FANCTRL_UPDT   2999
+#define LOOP_TACH_UPDT      7919      // prime 1000
+#define LOOP_GUI_UPDT       5000
+#define LOOP_GUI_UPDT_FAST  500
+#define LOOP_LED_UPDT       100
+#define LOOP_ADC_UPDT       15117
 
 // EEPROM
 #define EEPROM_SIG        0x01      // aka version, eeprom will be cleared if this doesn't match
@@ -55,7 +59,7 @@ class Log {
 #define SCL_PORT        PORTB
 #define SDA_PIN         4
 #define SDA_PORT        PORTB
-#define I2C_FASTMODE    0
+#define I2C_FASTMODE    1
 #define I2C_SLOWMODE    0
 #define I2C_NOINTERRUPT 1
 #define I2C_TIMEOUT     100
@@ -63,6 +67,8 @@ class Log {
 
 // LCD
 #define HASLCD          1
+#define LCD_OFF         0
+#define LCD_ON          1
 #define LCD_ROTTIME     5000000UL
 #define LCD_TIMEOUT     60000000UL
 #define LCD_STATUSLEN   12
@@ -71,6 +77,11 @@ class Log {
 // Note that library was modified to not include asm twice
 // Otherwise linker would complain loudly...
 #include <LiquidCrystal_SI2C.h>
+
+// GUI
+#define GUI_AUTO        0
+#define GUI_MANUAL      1
+#define GUI_DUMB        2
 
 // LED
 #define LED_GREEN_PORT    PORTC 
@@ -87,7 +98,7 @@ class Log {
 #define LED_DBLFLASH      4
 
 // TEMPERATURE SENSOR
-#define FAKE_TEMP_OUTPUT  0
+#define FAKE_TEMP_OUTPUT  1
 #define MLX90614_I2CADDR  0x5A
 // RAM
 #define MLX90614_RAWIR1   0x04
