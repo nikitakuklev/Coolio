@@ -1,6 +1,23 @@
+#include "lcd.h"
+#include "errors.h"
+
+
 #if HASLCD
 
-static void setupLCD() {
+#include "SoftWire.h"
+
+//inline TwoWire Wire = TwoWire();
+SoftWire Wire = SoftWire();
+
+#include <hd44780.h>                       // main hd44780 header
+#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
+
+#if HASLCD
+//inline LiquidCrystal_SI2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
+hd44780_I2Cexp lcd(0x3F, I2Cexp_PCF8574, 2, 1, 0, 4, 5, 6, 7, 3, HIGH);
+#endif
+
+void setupLCD() {
   #if (DEBUG)
     Serial.println("Setting up LCD");
   #endif
@@ -17,7 +34,7 @@ static void setupLCD() {
   createBarChars();
 }
 
-static void createBarChars() {
+void createBarChars() {
   byte mask = 0x10;
   byte current=0;
   for (int cgchar=1; cgchar<=4; cgchar++) {
@@ -34,7 +51,7 @@ static void createBarChars() {
   lcd.createChar(0, LCD_character_array);
 }
 
-static void updateLCD() {
+void updateLCD() {
   uint32_t GUItime = micros();
 
   // LCD timeout  
@@ -138,7 +155,7 @@ static void updateLCD() {
   }
 }
 
-static inline void manualGUIreset() {
+void manualGUIreset() {
   if (GUImode == GUI_MANUAL) {
     // Back to start screen
     GUIstate = 6;
@@ -146,7 +163,7 @@ static inline void manualGUIreset() {
   }
 }
 
-static inline void setNextGUIState() {  
+void setNextGUIState() {  
   // GUI state overflow 
   if (GUIstate >= GUIstate_toplim) {                
     GUIstate = GUIstate_botlim;
@@ -155,7 +172,7 @@ static inline void setNextGUIState() {
   }
 }
 
-static inline void setPrevGUIState() {
+void setPrevGUIState() {
   if (GUIstate <= GUIstate_botlim) {                
     GUIstate = GUIstate_toplim;
   } else { 
@@ -163,11 +180,11 @@ static inline void setPrevGUIState() {
   }
 }
 
-static inline void setDefaultGUIState() {
+void setDefaultGUIState() {
   GUIstate = GUIstate_botlim;
 }
 
-static inline void drawFatalErrorScreen() {
+void drawFatalErrorScreen() {
   GUIrotation = GUItimeout = false;
   lcd.on();
   lcd.setBacklight(HIGH);
@@ -176,7 +193,7 @@ static inline void drawFatalErrorScreen() {
 }
 
 // From https://www.best-microcontroller-projects.com/hitachi-hd44780.html
-static inline void drawBar(byte x, byte y, byte pixels) {
+void drawBar(byte x, byte y, byte pixels) {
   int i;
   byte blocks = pixels / 5; // 5 pixels wide per character.
   byte rem    = pixels % 5;
@@ -190,12 +207,7 @@ static inline void drawBar(byte x, byte y, byte pixels) {
   }
 }
 
-static inline void drawBarPercent(uint8_t x, uint8_t y, uint8_t width, uint8_t percent) {
-  uint8_t pixels = width * 5 * percent;
-  drawBar(x, y, pixels);
-}
-
-static void drawGUI() { 
+void drawGUI() { 
   #if (DEBUG>2)
     Serial.print(" Draw GUI state: "); Serial.println(GUIstate);
   #endif 

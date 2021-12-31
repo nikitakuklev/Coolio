@@ -1,5 +1,8 @@
 #ifndef constants_h
 #define constants_h
+
+#define NO_GLOBAL_INSTANCES 1
+
 #include <avr/boot.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
@@ -21,16 +24,6 @@
 #define GUI_DEBUG DEBUG
 
 // FUNCTION/CLASS PROTOTYPES
-class Log {
-  public:
-    static void println(String s, int level);
-    static void println(String s);
-    static void println(__FlashStringHelper* s);
-    static void print(String s, int level);
-    static void print(String s);
-    static void print(__FlashStringHelper* s);
-};
-
 
 // MACROS
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
@@ -64,8 +57,8 @@ class Log {
 #define I2C_NOINTERRUPT 1
 #define I2C_TIMEOUT     100
 //#include <SoftI2CMaster.h>
-#include <SoftWire.h>
-
+//#include <SoftWire.h>
+//extern SoftWire Wire;
 
 // LCD
 #define HASLCD          1
@@ -79,8 +72,8 @@ class Log {
 // Note that library was modified to not include asm twice
 // Otherwise linker would complain loudly...
 //#include <LiquidCrystal_SI2C.h>
-#include <hd44780.h>                       // main hd44780 header
-#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
+//#include <hd44780.h>                       // main hd44780 header
+//#include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 
 // GUI
 #define GUI_AUTO        0

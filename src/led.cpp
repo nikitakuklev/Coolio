@@ -1,4 +1,6 @@
-static void setupLED() {
+#include "led.h"
+
+void setupLED() {
   #if (DEBUG>1)
     Serial.println("Setting up LED");
   #endif
@@ -9,7 +11,7 @@ static void setupLED() {
   led_green_state = led_red_state = 0;
 }
 
-static void setOKLed(uint8_t state) {
+void setOKLed(uint8_t state) {
   #if (LED_DEBUG>2)
     Serial.print(" LED green set: "); Serial.println(state);
   #endif 
@@ -36,7 +38,7 @@ static void setOKLed(uint8_t state) {
   }  
 }
 
-static void setErrLed(uint8_t state) {
+void setErrLed(uint8_t state) {
   #if (LED_DEBUG>1)
     Serial.print(" LED red set: "); Serial.println(state);
   #endif 
@@ -56,12 +58,12 @@ static void setErrLed(uint8_t state) {
   }
 }
 
-static inline void queueLedUpdate() {
+void queueLedUpdate() {
   // Queue LED update by zeroing out the next update time
   led_immediate_update = true;
 }
 
-static void updateLED() {
+void updateLED() {
   #if (LED_DEBUG>2)
     Serial.print(" UpdateLED: "); Serial.print(led_green_state); Serial.print(led_red_state);
     Serial.print(fan_state); Serial.print(GUImode);

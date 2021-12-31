@@ -1,8 +1,10 @@
+#include "globals.h"
+
 // byte 0 = sig
 // byte 1 = mode
 // byte 2 = manual fan state
 
-static void restoreEEPROMvals() {
+void restoreEEPROMvals() {
   #if (DEBUG)
      Serial.println("Reading EEPROM");
   #endif
@@ -31,7 +33,7 @@ static void restoreEEPROMvals() {
   lastEEPROMSaveTime = millis();
 }
 
-static void updateEEPROMvals() {
+void updateEEPROMvals() {
   #if (DEBUG)
      Serial.println(F("Saving EEPROM:")); Serial.print(GUImode); Serial.print("|"); Serial.println(man_state); 
   #endif

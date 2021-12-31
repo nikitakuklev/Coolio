@@ -1,3 +1,7 @@
+#include "globals.h"
+#include "extras.h"
+#include "logic.h"
+
 // Encoder sensing is done by interrupting on falling edge of
 // pin 1 with dedicated H/W interrupt, waiting for corresponding rising edge
 // and then sensing value of other pin (not on H/W int) to determine direction.
@@ -61,7 +65,7 @@ ISR (INT0_vect) {
   }
 }
 
-static void setupEncoderEXTINT0() {
+void setupEncoderEXTINT0() {
   #if (DEBUG)
     Serial.println(F("Setting up encoder"));
   #endif
@@ -77,7 +81,7 @@ static void setupEncoderEXTINT0() {
   //EICRA |= (_BV(ISC01) | _BV(ISC00));         // ISC0 = 11 (rising on pin 0)  
 }
 
-static inline void enableEncoderEXTINT0() {
+void enableEncoderEXTINT0() {
   #if (DEBUG>2)
     Serial.println(F("Enabling encoder"));
   #endif
@@ -85,7 +89,7 @@ static inline void enableEncoderEXTINT0() {
   lastEncoderTime = micros();
 }
 
-static inline void disableEncoderEXTINT0() {
+void disableEncoderEXTINT0() {
   #if (DEBUG>2)
     Serial.println(F("Disabling encoder"));
   #endif
@@ -126,7 +130,7 @@ ISR (INT1_vect) {
   }
 }
 
-static void setupButtonEXTINT1() { 
+void setupButtonEXTINT1() { 
   #if (DEBUG)
     Serial.println(F("Setting up button"));
   #endif
@@ -137,7 +141,7 @@ static void setupButtonEXTINT1() {
   EIFR |= _BV(INTF1);                         // Clear external interrupt flag 1  
 }
 
-static inline void enableButtonEXTINT1() {
+void enableButtonEXTINT1() {
   #if (DEBUG>2)
     Serial.println(F("Enabling button"));
   #endif
@@ -145,15 +149,15 @@ static inline void enableButtonEXTINT1() {
   lastButtonTime = micros();
 }
 
-static inline void disableButtonEXTINT1() {
+void disableButtonEXTINT1() {
   #if (DEBUG>2)
     Serial.println(F("Disabling button"));
   #endif
   EIMSK &= ~_BV(INT1);                        // Disable INT1
 }
-//static inline void setButtonFallingEdge() {
+//inline void setButtonFallingEdge() {
 //  EICRA |= _BV(ISC11); EICRA &= ~_BV(ISC10);
 //}
-//static inline void setButtonRisingEdge() {
+//inline void setButtonRisingEdge() {
 //  EICRA |= _BV(ISC11) | _BV(ISC10);
 //}

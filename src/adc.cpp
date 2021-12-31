@@ -1,4 +1,8 @@
-static void setupADC() {
+#include "adc.h"
+#include "extras.h"
+#include "errors.h"
+
+void setupADC() {
   #if (DEBUG)
     Serial.println("Setting up ADC");
   #endif
@@ -17,7 +21,7 @@ static void setupADC() {
   interrupts();
 }
 
-static void updatePowerData() {
+void updatePowerData() {
   if (!adc_state) {
     enableADC();
   }
@@ -49,7 +53,7 @@ static void updatePowerData() {
   setADCPin(0xFF);
 }
 
-static inline void enableADC() {
+void enableADC() {
   #if (DEBUG > 2)
     Serial.println(" Enabling ADC");
   #endif
@@ -59,7 +63,7 @@ static inline void enableADC() {
   interrupts();
 }
 
-static inline void disableADC() {
+void disableADC() {
   #if (DEBUG > 2)
     Serial.println(" Disabling ADC");
   #endif
@@ -72,7 +76,7 @@ static inline void disableADC() {
   interrupts();
 }
 
-static double getChipTemperature() {
+double getChipTemperature() {
   #if (DEBUG>1)
     logger.print(F(" Getting CHIP temp..."));
   #endif
@@ -100,7 +104,7 @@ static double getChipTemperature() {
   return t;                              // The returned temperature is in degrees Celsius
 }
 
-static uint16_t getADCValue() {
+uint16_t getADCValue() {
   if (bit_is_set(ADCSRA,ADEN)) {
     #if (DEBUG > 2)
       Serial.println(F(" Getting ADC value"));
@@ -116,7 +120,7 @@ static uint16_t getADCValue() {
   }
 }
 
-static void adcAlarmCheck() {
+void adcAlarmCheck() {
   #if (DEBUG > 2)
     Serial.println(F(" ADC alarm check"));
   #endif
@@ -129,7 +133,7 @@ static void adcAlarmCheck() {
   }
 }
 
-static void setADCPin(uint8_t pin) {
+void setADCPin(uint8_t pin) {
   #if (DEBUG > 2)
     Serial.print(F(" ADC pin set to ")); Serial.println(pin); 
   #endif

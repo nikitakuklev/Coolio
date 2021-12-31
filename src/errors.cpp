@@ -1,4 +1,13 @@
-static void declareError(uint8_t code) {
+#include "errors.h"
+#include "led.h"
+#include "timer.h"
+#include "adc.h"
+#include "encoder.h"
+#include "logic.h"
+#include "lcd.h"
+#include "fanctrl.h"
+
+void declareError(uint8_t code) {
   systemCode = code;
   errCnt++;
   if (!systemError) {
@@ -26,12 +35,12 @@ static void declareError(uint8_t code) {
   clearError();
 }
 
-static bool isFatal(uint8_t code) {
+bool isFatal(uint8_t code) {
   // Numeric second hex means fatal
   return (code & 0x0F) < 0x0A;  
 }
 
-static void clearError() {
+void clearError() {
   setLED_nonfatalerr();
   lastErrorCode = systemCode;
   memset(lastErrorString,0,LCD_STATUSLEN*sizeof(char));
@@ -45,7 +54,7 @@ static void clearError() {
   #endif
 }
 
-static void updateStatusString() {
+void updateStatusString() {
   memset(statusString,0,sizeof(char)*LCD_STATUSLEN);  
   // Indexing by high byte of error code, and loading strings for code memory
   strcpy_P(statusString, (char*)pgm_read_word(&statusStringTable[systemCode>>4]));
@@ -55,7 +64,7 @@ static void updateStatusString() {
   #endif
 }
 
-static void panic(uint8_t err) { 
+void panic(uint8_t err) { 
   #if (DEBUG)
     Serial.println(F("PANIC TRIGGERED, HALTING"));
     Serial.print("Error code: "); Serial.println(err,HEX);

@@ -1,4 +1,8 @@
-static void setupTach() {
+#include "globals.h"
+#include "extras.h"
+#include "timer.h"
+
+void setupTach() {
   #if (DEBUG)
     Serial.println("Setting up tach");
   #endif
@@ -15,7 +19,7 @@ static void setupTach() {
   #endif
 }
 
-static void doTachRun(unsigned long timeout) {
+void doTachRun(unsigned long timeout) {
   if (fan_state == 0) {
     
   }
@@ -249,7 +253,7 @@ ISR (PCINT1_vect) {
 #undef PIN 
 #undef ERRVAR
 
-static inline void tachCleanup() {
+inline void tachCleanup() {
   // We need to clean up volatiles, but can't use memset because 
   // "hurr durr C++ undefined behaviour casting away volatile modifier"
   // so need to write our own loop and hope it gets optimized 

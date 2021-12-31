@@ -1,113 +1,16 @@
-
-#include "constants.h"
-
-// General
-volatile uint8_t systemCode = 0;       // System state (0=normal)
-static char statusString[LCD_STATUSLEN+1];
-static uint8_t lastErrorCode = 0;
-static uint32_t errCnt = 0;
-static char lastErrorString[LCD_STATUSLEN+1];
-volatile bool systemError = false;
-volatile uint8_t exitCode = 0;
-
-// EEPROM
-static uint32_t lastEEPROMSaveTime;
-static uint8_t eeprom_guimode;
-static uint8_t eeprom_manstate;
-
-// Temperature
-static float temp_IR;
-static float temp_sensor;
-static float temp_chip;
-
-// Fan control
-static uint8_t fan_state = 0;                // 0=off, 1=min, 1-11=curve, 12=max
-static uint8_t new_state = 0;
-volatile uint8_t man_state = 0;
-static bool spinup_required = false;
-volatile bool manualpwm_changed = false;
-volatile bool immediate_fan_updt_reqd = false;
-volatile bool fan_mode_changed = false;
-static uint8_t fanFailScores[FANARR_SIZE];
-
-// Timer
-static uint16_t t1_topcnt;
-static unsigned long t1_freq;
-volatile uint8_t t1_pwm_a = 100;
-volatile uint8_t t1_pwm_b = 100;
-
-// ADC
-static uint8_t adc_state = 0;
-static float fan_voltage = 0.0;
-static float fan_current = 0.0;
-static float fan_power = 0.0;
-
-// Tach
-volatile bool firstINT = true;
-static uint16_t fanrpmssum[FANARR_SIZE];
-static uint16_t fanrpmsarr[FANARR_SIZE][TACH_SMOOTHNUM];
-static uint16_t fanrpms[FANARR_SIZE];
-static uint16_t fanrpmavg;
-volatile unsigned long times[FANARR_SIZE];
-volatile uint16_t numpts[FANARR_SIZE];
-
-#if DEBUG
-  volatile int8_t PCINT2_err;
-  volatile int8_t PCINT1_err;
-  volatile unsigned long ISRtime;
-  volatile unsigned long ISRfirsttime;
-  volatile uint16_t numISRcalls;
-#endif
-
-// LOOPING
-static uint32_t temp_update_time;
-static uint32_t fanctrl_update_time;
-static uint32_t tach_update_time;
-static uint32_t gui_update_time;
-static uint32_t adc_update_time;
-static uint32_t led_update_time;
-
-// LED
-static uint8_t led_green_state;
-static uint8_t led_red_state;
-static uint8_t led_green_counter;
-static uint8_t led_red_counter;
-volatile bool led_immediate_update = false;
-
-// GUI
-static uint8_t GUIstate = 0;
-volatile uint8_t GUImode = 0;           //0=normal, 1=manual
-volatile bool GUImode_changed = false;
-volatile bool GUI_immediate_update = false;
-static uint8_t GUIstate_old;
-static uint8_t GUIstate_toplim;
-static uint8_t GUIstate_botlim;
-static uint8_t LCDstate;
-byte LCD_character_array[8];
-static uint16_t LCD_update_period;
-
-static uint32_t GUItime_old = 0;
-volatile bool GUI_update_required;
-
-static uint8_t GUIrotation;
-volatile uint8_t GUIrotation_skipnext;
-static uint8_t GUItimeout;
-
-volatile uint32_t lastButtonTime;
-volatile uint32_t lastEncoderTime;
-
-volatile bool button_down;
-volatile bool encoder_down;
-
-//const char pad[500] PROGMEM = { 0 };
-
-#if HASLCD
-//static LiquidCrystal_SI2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
-hd44780_I2Cexp lcd(0x3F, I2Cexp_PCF8574, 2, 1, 0, 4, 5, 6, 7, 3, HIGH);
-#endif
-
-//*****************************************
-Log logger;
+#include "globals.h"
+#include "adc.h"
+#include "eeprom.h"
+#include "errors.h"
+#include "extras.h"
+#include "encoder.h"
+#include "fanctrl.h"
+#include "ir.h"
+#include "lcd.h"
+#include "led.h"
+#include "logic.h"
+#include "timer.h"
+#include "tach.h"
 
 void setup() {
   #ifdef DEBUG  
@@ -131,7 +34,7 @@ void setup() {
   //setup_test_IR_PWM_TACH_LCD_ENC();
   //setup_test_IR_PWM_TACH_LCD_ENC_LED();
 
-  SoftWire Wire = SoftWire();
+  //SoftWire Wire = SoftWire();
 
   restoreEEPROMvals();
   setupLED();

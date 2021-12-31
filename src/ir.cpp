@@ -1,6 +1,11 @@
+#include "ir.h"
+#include "errors.h"
+#include "extras.h"
+#include "SoftI2CMaster.h"
+
 // Credits to AdaFruit and SoftI2C library for most of this code
 
-static void setupIRSensor() {
+void setupIRSensor() {
   #if (DEBUG>1)
     Serial.println("Setting up IR sensor");
   #endif
@@ -8,7 +13,7 @@ static void setupIRSensor() {
   //i2c_init();
 }
 
-static void updateTemps() {
+void updateTemps() {
   #if FAKE_TEMP_OUTPUT
     static int8_t sign = 1;
     #if (DEBUG>1)
@@ -41,7 +46,7 @@ static void updateTemps() {
   #endif
 }
 
-static void tempAlarmCheck() {
+void tempAlarmCheck() {
   #if (DEBUG>1)
     Serial.println(F(" Checking for temp alarms"));
   #endif
@@ -65,7 +70,7 @@ static void tempAlarmCheck() {
   #endif
 }
 
-static float getIRTemp() {
+float getIRTemp() {
   #if (DEBUG>1)
     Serial.println(F(" Getting IR temp"));
   #endif
@@ -76,7 +81,7 @@ static float getIRTemp() {
   return readTempBytes();
 }
 
-static float getSensorTemp() {
+float getSensorTemp() {
   #if (DEBUG>1)
     Serial.println(F(" Getting sensor temp"));
   #endif
@@ -87,7 +92,7 @@ static float getSensorTemp() {
   return readTempBytes();  
 }
 
-static inline float readTempBytes() {  
+float readTempBytes() {  
   // Immediately request read
   i2c_rep_start((MLX90614_I2CADDR << 1) | I2C_READ);
   // As per datasheet, we get 3 bytes back

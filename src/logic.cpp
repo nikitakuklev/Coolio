@@ -1,6 +1,13 @@
+#include "logic.h"
+#include "errors.h"
+#include "lcd.h"
+#include "led.h"
+#include "fanctrl.h"
+
+
 // Contains all the business logic
 
-static void setMode(uint8_t mode) {
+void setMode(uint8_t mode) {
   if(GUImode == 0) {
     setNormalMode();    
   } else if (GUImode == 1) {
@@ -12,7 +19,7 @@ static void setMode(uint8_t mode) {
   }
 }
 
-static void GUIloop() {  
+void GUIloop() {  
   #if (DEBUG>1)
     Serial.println(F(" Entering GUI loop"));
   #endif
@@ -34,7 +41,7 @@ static void GUIloop() {
   #endif
 }
 
-static inline void setNormalMode() {
+void setNormalMode() {
   #if (DEBUG>1)
     Serial.println(F(" Setting normal mode"));
   #endif
@@ -50,7 +57,7 @@ static inline void setNormalMode() {
   #endif
 }
 
-static inline void setManualMode() {
+void setManualMode() {
   #if (DEBUG>1)
     Serial.println(F(" Setting manual mode"));
   #endif
@@ -66,7 +73,7 @@ static inline void setManualMode() {
   #endif
 }
 
-static inline void setDumbMode() {
+void setDumbMode() {
   #if (DEBUG>1)
     Serial.println(F(" Setting dumb mode"));
   #endif
@@ -83,7 +90,7 @@ static inline void setDumbMode() {
 }
 
 // Encoder
-static inline void buttonDown() {
+void buttonDown() {
   GUImode += 1;
   // 3 modes available
   if (GUImode > 2) {
@@ -93,7 +100,7 @@ static inline void buttonDown() {
   fan_mode_changed = true;
   immediate_fan_updt_reqd = true;
 }
-static inline void encoderIncrement() {
+void encoderIncrement() {
   #if (DEBUG>2)
     Serial.println("EINC");
   #endif
@@ -106,7 +113,7 @@ static inline void encoderIncrement() {
     manualFanCtrlIncrement();
   }
 }
-static inline void encoderDecrement() {
+void encoderDecrement() {
   #if (DEBUG>2)
     Serial.println("EDEC");
   #endif
@@ -121,7 +128,7 @@ static inline void encoderDecrement() {
 }
 
 // LED
-static inline void setLED_normal() {
+void setLED_normal() {
   if (fan_state == 0) {
     setOKLed(LED_FLASH);
   } else {
@@ -134,11 +141,11 @@ static inline void setLED_normal() {
   }
 }
 
-static inline void setLED_nonfatalerr() {
+void setLED_nonfatalerr() {
   setErrLed(LED_ON);
 }
 
-static inline void setLED_manualmode() {
+void setLED_manualmode() {
   setOKLed(LED_ON);
   if (lastErrorCode == 0 && systemCode == 0) {
     setErrLed(LED_OFF);
@@ -147,7 +154,7 @@ static inline void setLED_manualmode() {
   }
 }
 
-static inline void setLED_dumbmode() {
+void setLED_dumbmode() {
   setOKLed(LED_ON);
   if (lastErrorCode == 0 && systemCode == 0) {
     setErrLed(LED_OFF);
@@ -156,7 +163,7 @@ static inline void setLED_dumbmode() {
   }
 }
 
-static inline void setLED_panic() {
+void setLED_panic() {
   setOKLed(LED_OFF);
   setErrLed(LED_BLINK_SLOW);
 }

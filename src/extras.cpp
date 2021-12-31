@@ -1,6 +1,8 @@
+#include "extras.h"
+
 #if (DEBUG)
 
-static void printBits(byte myByte){
+void printBits(byte myByte) {
   for(byte mask = 0x80; mask; mask >>= 1){
     if(mask  & myByte) {
        Serial.print('1');
@@ -10,7 +12,7 @@ static void printBits(byte myByte){
   }
 }
 
-static void printT1Registers() {
+void printT1Registers() {
   #if (DEBUG > 3)
     Serial.print("T1 | TCCR1A:"); printBits(TCCR1A); 
     Serial.print(" | TCCR1B:"); printBits(TCCR1B);
@@ -20,7 +22,7 @@ static void printT1Registers() {
   #endif
 }
 
-static void printPORTDRegisters() {
+void printPORTDRegisters() {
   #if (DEBUG > 3)
     Serial.print("PD | DDRD:  "); printBits(DDRD); 
     Serial.print(" | PORTD: "); printBits(PORTD);
@@ -29,7 +31,7 @@ static void printPORTDRegisters() {
   #endif
 }
 
-static void printPORTCRegisters() {
+void printPORTCRegisters() {
   #if (DEBUG > 3)
   Serial.print("PC | DDRC:  "); printBits(DDRC); 
   Serial.print(" | PORTC: "); printBits(PORTC);
@@ -38,7 +40,7 @@ static void printPORTCRegisters() {
   #endif
 }
 
-static void printPCRegisters() {
+void printPCRegisters() {
   #if (DEBUG > 3)
   Serial.print("PC | PCIFR: "); printBits(PCIFR); 
   Serial.print(" | PCMSK2:"); printBits(PCMSK2);
@@ -48,14 +50,14 @@ static void printPCRegisters() {
   #endif
 }
 
-//static void printFanData(uint8_t fnum, unsigned long rot) {
+//void printFanData(uint8_t fnum, unsigned long rot) {
 //  Serial.print("Fan "); Serial.print(fnum); Serial.print(" - ");
 //  Serial.print(rot);
 //  Serial.print(" | Fan:");
 //  Serial.println(60000000/(rot*4));
 //}
 
-static void printFanDataMore() {
+void printFanDataMore() {
   Serial.println(" Detailed fan data: ");
   for(uint8_t i=0; i<FANARR_SIZE; ++i) {
 //    Serial.print(i); Serial.print(" | ");      
@@ -77,25 +79,25 @@ static void printFanDataMore() {
   Serial.print(" Avg: "); Serial.println(fanrpmavg);
 }
 
-static void printTemps() {
+void printTemps() {
   Serial.print(" IR: "); Serial.print(temp_IR);
   Serial.print(" | SENS: "); Serial.print(temp_sensor);
   Serial.print(" | CHIP: "); Serial.println(temp_chip);
 }
 
-static inline void bl() {
+void bl() {
   Serial.print("(");
 }
-static inline void br() {
+void br() {
   Serial.print(")");
 }
-static inline void vline() {
+void vline() {
   Serial.print("|");
 }
 
 #endif
 
-static inline uint16_t toRPM(uint32_t deltat, uint16_t num) {
+uint16_t toRPM(uint32_t deltat, uint16_t num) {
   if (num == 0) {
     return 0;
   } else {

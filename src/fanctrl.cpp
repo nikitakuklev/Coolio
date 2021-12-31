@@ -1,13 +1,19 @@
+#include "fanctrl.h"
+#include "globals.h"
+#include "errors.h"
+#include "extras.h"
+#include "timer.h"
+
 #define GAP     (FANCTRL_TEMP_TOP - FANCTRL_TEMP_BOT)
 #define DIV     10
 #define FIMAX   11
 #define I1(VAL) FANCTRL_MINCYCLE + ((FANCTRL_MAXCYCLE-FANCTRL_MINCYCLE)*VAL)/FIMAX
 #define T1(VAL) FANCTRL_TEMP_BOT + ((FANCTRL_TEMP_TOP-FANCTRL_TEMP_BOT)*VAL)/(FIMAX-1)
 
-static const uint8_t pwm_vals[FIMAX+2] = {0,FANCTRL_MINCYCLE,I1(1),I1(2),I1(3),I1(4),I1(5),I1(6),I1(7),I1(8),I1(9),I1(10),FANCTRL_MAXCYCLE};
-static const uint8_t temp_vals[FIMAX+1] = {FANCTRL_TEMP_OFF,FANCTRL_TEMP_BOT,T1(1),T1(2),T1(3),T1(4),T1(5),T1(6),T1(7),T1(8),T1(9),FANCTRL_TEMP_TOP};
+const uint8_t pwm_vals[FIMAX+2] = {0,FANCTRL_MINCYCLE,I1(1),I1(2),I1(3),I1(4),I1(5),I1(6),I1(7),I1(8),I1(9),I1(10),FANCTRL_MAXCYCLE};
+const uint8_t temp_vals[FIMAX+1] = {FANCTRL_TEMP_OFF,FANCTRL_TEMP_BOT,T1(1),T1(2),T1(3),T1(4),T1(5),T1(6),T1(7),T1(8),T1(9),FANCTRL_TEMP_TOP};
 
-static void doFanCtrlUpdate() {
+void doFanCtrlUpdate() {
   #if (DEBUG>2)
     Serial.println(F(" Auto fan update"));
   #endif
@@ -34,7 +40,7 @@ static void doFanCtrlUpdate() {
   }
 }
 
-static inline void manualFanCtrlUpdate() {
+void manualFanCtrlUpdate() {
   #if (DEBUG>2)
     Serial.print(F(" Manual fan update to ")); Serial.println(man_state);
   #endif
@@ -62,21 +68,21 @@ static inline void manualFanCtrlUpdate() {
   }
 }
 
-static inline void manualFanCtrlIncrement() {
+void manualFanCtrlIncrement() {
   if (fan_state < FIMAX+1) {
     man_state = fan_state + 1;
     manualpwm_changed = true;
   }
 }
 
-static inline void manualFanCtrlDecrement() {
+void manualFanCtrlDecrement() {
   if (fan_state > 0) {
     man_state = fan_state - 1;
     manualpwm_changed = true;
   }
 }
 
-static void updatePWMvalues() {
+void updatePWMvalues() {
   #if (DEBUG>2)
     Serial.println(F(" Calculating new PWM state"));
   #endif
@@ -145,7 +151,7 @@ static void updatePWMvalues() {
   t1_pwm_b = cycle;
 }
 
-static void fanCtrlAlarmCheck() {
+void fanCtrlAlarmCheck() {
   #if (DEBUG>1)
     Serial.print(F(" Checking fan alarms (active): ")); printBits(FANCTRL_ACTFANS); Serial.println("");
   #endif
@@ -166,7 +172,7 @@ static void fanCtrlAlarmCheck() {
   }
 }
 
-static void setFansToMax() {
+void setFansToMax() {
   #if (DEBUG>1)
     Serial.println(F(" Setting timer1 PWMs to MAX"));
   #endif
@@ -174,7 +180,7 @@ static void setFansToMax() {
   analogWriteT1Raw(TIMER1_B_PIN,t1_topcnt);
 }
 
-static void setFansToPWM() {
+void setFansToPWM() {
   #if (DEBUG>1)
     Serial.println(F(" Updating timer1 PWMs"));
   #endif
@@ -182,7 +188,7 @@ static void setFansToPWM() {
   analogWriteT1(TIMER1_B_PIN, t1_pwm_b);
 }
 
-static void setupFanController() {
+void setupFanController() {
   #if (DEBUG)
     Serial.println(F("Setting up fan controller"));
   #endif
@@ -212,7 +218,7 @@ static void setupFanController() {
   interrupts();
 }
 
-static void setFanPower(bool state) {
+void setFanPower(bool state) {
   if (state) {
     enableFanPower();
   } else {
@@ -220,14 +226,14 @@ static void setFanPower(bool state) {
   }
 }
 
-static void disableFanPower() {
+void disableFanPower() {
   #if (DEBUG>1)
     Serial.println(" Fan power OFF");
   #endif
   FANCTRL_SW_PORT &= ~FANCTRL_SW_PIN;
 }
 
-static void enableFanPower() {
+void enableFanPower() {
   #if (DEBUG>1)
     Serial.println(" Fan power ON");
   #endif

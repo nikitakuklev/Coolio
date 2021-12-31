@@ -1,4 +1,7 @@
-static void analogWriteT1Raw(uint8_t pin, uint16_t value) {
+#include "timer.h"
+#include "errors.h"
+
+void analogWriteT1Raw(uint8_t pin, uint16_t value) {
   // Note that writing to TCNT1 blocks compare on next cycle,
   // which means will miss if value=0 unless we do special case
   // (Not relevant for now)
@@ -30,7 +33,7 @@ static void analogWriteT1Raw(uint8_t pin, uint16_t value) {
 }
 
 // Set timer1 specified pin to the desired relative (0-100) duty cycle
-static void analogWriteT1(uint8_t pin, uint32_t value) {
+void analogWriteT1(uint8_t pin, uint32_t value) {
   if (value > 100) {
     declareError(TIMER1_WRONG_PWM);
     #if (DEBUG)
@@ -68,7 +71,7 @@ static void analogWriteT1(uint8_t pin, uint32_t value) {
 /*
 Starts timer 1 with the specified frequency under 31kHz
 */
-static void setupTimer1(uint16_t freq) {
+void setupTimer1(uint16_t freq) {
   if (freq > 31000U) { declareError(TIMER1_FREQ_ERR); return; }
   noInterrupts();
   setTimerPinsHigh();
@@ -102,12 +105,12 @@ static void setupTimer1(uint16_t freq) {
   #endif
 }
 
-static inline void setTimerPinsHigh() {
+void setTimerPinsHigh() {
   TIMER1_PORT |= (TIMER1_A_PIN | TIMER1_B_PIN);  // Set high
   TIMER1_DDR  |= (TIMER1_A_PIN | TIMER1_B_PIN);  // Timer pins to outputs 
 }
 
-static inline void stopTimer1() {
+void stopTimer1() {
   // Stop PWM
   #if (DEBUG > 2)
     Serial.println(" Stopping timer 1");
@@ -115,7 +118,7 @@ static inline void stopTimer1() {
   TCCR1A &= ~(_BV(COM1A1)|_BV(COM1B1)); 
 }
 
-static inline void resumeTimer1() {
+void resumeTimer1() {
   // Resume PWM
   #if (DEBUG > 2)
     Serial.println(" Resuming timer 1");
