@@ -12,6 +12,9 @@
 #include "timer.h"
 #include "tach.h"
 
+#include "SoftWire.h"  
+SoftWire Wire = SoftWire();
+
 void setup() {
   #ifdef DEBUG  
     Serial.begin(115200); 
@@ -33,8 +36,6 @@ void setup() {
   //setup_test_IR_PWM_TACH_LCD();
   //setup_test_IR_PWM_TACH_LCD_ENC();
   //setup_test_IR_PWM_TACH_LCD_ENC_LED();
-
-  //SoftWire Wire = SoftWire();
 
   restoreEEPROMvals();
   setupLED();
@@ -132,22 +133,7 @@ void loop() {
       GUI_immediate_update = true;
     } 
   }
-  
-  if (spinup_required) {
-    #if (DEBUG)
-      Serial.println(F("SPINUP START"));
-      activity = true;
-    #endif
-    setFansToMax();
-    delay(1000);
-    setFansToPWM();
-    spinup_required = false;
-    #if (DEBUG)
-      Serial.println(F("SPINUP DONE"));
-      activity = true;
-    #endif 
-  }  
-  
+    
   // Tachometer update
   if (main_time > tach_update_time) {  
     #if (DEBUG)      
@@ -216,6 +202,21 @@ void loop() {
     }
   }
 
+  if (spinup_required) {
+    #if (DEBUG)
+      Serial.println(F("SPINUP START"));
+      activity = true;
+    #endif
+    setFansToMax();
+    delay(1000);
+    setFansToPWM();
+    spinup_required = false;
+    #if (DEBUG)
+      Serial.println(F("SPINUP DONE"));
+      activity = true;
+    #endif 
+  }  
+
   if (cleanup) {
     tachCleanup();
     cleanup = false;
@@ -226,6 +227,8 @@ void loop() {
       Serial.print(millis()); Serial.print("|"); Serial.println(micros()-main_time_micros);
     }
   #endif
+
+
 }
 
 

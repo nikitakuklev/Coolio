@@ -1,7 +1,15 @@
 #include "ir.h"
 #include "errors.h"
 #include "extras.h"
-#include "SoftI2CMaster.h"
+
+#define SOFTWIRE 1
+
+#if !SOFTWIRE
+//#include "SoftI2CMaster.h"
+#else
+#include "SoftWire.h"
+// SoftWire Wire = SoftWire();
+#endif
 
 // Credits to AdaFruit and SoftI2C library for most of this code
 
@@ -74,10 +82,16 @@ float getIRTemp() {
   #if (DEBUG>1)
     Serial.println(F(" Getting IR temp"));
   #endif
+  #if !SOFTWIRE
   // Issue start condition and indicate that we want to write
   i2c_start((MLX90614_I2CADDR << 1) | I2C_WRITE);
   // Send the byte indicating we will be reading OBJ1 temperature
-  i2c_write(MLX90614_TOBJ1);    
+  i2c_write(MLX90614_TOBJ1); 
+  #else
+  Wire.beginTransmission(MLX90614_I2CADDR);
+  Wire.write(MLX90614_TOBJ1);
+  Wire.endTransmission(false);
+  #endif  
   return readTempBytes();
 }
 
@@ -85,14 +99,21 @@ float getSensorTemp() {
   #if (DEBUG>1)
     Serial.println(F(" Getting sensor temp"));
   #endif
+  #if !SOFTWIRE
   // Issue start condition and indicate that we want to write
   i2c_start((MLX90614_I2CADDR << 1) | I2C_WRITE);
   // Send the byte indicating we will be reading TA temperature
   i2c_write(MLX90614_TA);
-  return readTempBytes();  
+  #else
+  Wire.beginTransmission(MLX90614_I2CADDR);
+  Wire.write(MLX90614_TA);
+  Wire.endTransmission(false);
+  #endif
+  return readTempBytes();
 }
 
 float readTempBytes() {  
+  #if !SOFTWIRE
   // Immediately request read
   i2c_rep_start((MLX90614_I2CADDR << 1) | I2C_READ);
   // As per datasheet, we get 3 bytes back
@@ -103,6 +124,13 @@ float readTempBytes() {
   //uint8_t pec = i2c_read(true);       // Read 1 byte and then NACK (else can't reclaim bus control)
   i2c_read(true);
   i2c_stop();                           // Issue stop condition, release bus
+  #else
+  Wire.requestFrom(MLX90614_I2CADDR, 3, true);
+  int16_t data_low = Wire.read();
+  int16_t data_high = Wire.read();
+  //uint8_t pec = 
+  Wire.read();
+  #endif
 
   if (data_high & 0x0080) {
     // Error bit is 1!   
@@ -141,4 +169,3 @@ float readTempBytes() {
     //float fahrenheit = (celcius*1.8) + 32;
   }
 }
-

@@ -106,4 +106,7 @@ inline volatile bool encoder_down;
 
 inline Logger logger;
 
+// extern SoftWire wire;
+
+
 #endif

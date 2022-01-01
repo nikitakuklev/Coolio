@@ -52,13 +52,10 @@
 #define SCL_PORT        PORTB
 #define SDA_PIN         4
 #define SDA_PORT        PORTB
-#define I2C_FASTMODE    1
+#define I2C_FASTMODE    0
 #define I2C_SLOWMODE    0
 #define I2C_NOINTERRUPT 1
 #define I2C_TIMEOUT     100
-//#include <SoftI2CMaster.h>
-//#include <SoftWire.h>
-//extern SoftWire Wire;
 
 // LCD
 #define HASLCD          1

@@ -4,7 +4,7 @@
 
 void setupTach() {
   #if (DEBUG)
-    Serial.println("Setting up tach");
+    Serial.println(F("Setting up tach"));
   #endif
   noInterrupts();  
   DDRD &= ~TACH_PORTD_MASK;             // Set port D to input 
@@ -54,19 +54,19 @@ void doTachRun(unsigned long timeout) {
   interrupts();
   
   #if (DEBUG > 1)    
-    Serial.print(" ErrD: "); Serial.print(PCINT2_err);
-    Serial.print(" | ErrC: "); Serial.println(PCINT1_err);
+    Serial.print(F(" ErrD: ")); Serial.print(PCINT2_err);
+    Serial.print(F(" | ErrC: ")); Serial.println(PCINT1_err);
     uint16_t sum = 0;
     for (uint8_t i=0; i<FANARR_SIZE; i++) {
       if (numpts[i] > 0) {
         sum += numpts[i]+1;
       }
     }
-    Serial.print(" First ISR:"); Serial.print(ISRfirsttime);
-    Serial.print(" | Others (t|#|avg): "); Serial.print(ISRtime); 
+    Serial.print(F(" First ISR:")); Serial.print(ISRfirsttime);
+    Serial.print(F(" | Others (t|#|avg): ")); Serial.print(ISRtime); 
     Serial.print(" | "); Serial.print(numISRcalls);
     Serial.print(" | "); Serial.print(ISRtime/numISRcalls);
-    Serial.print(" | Missed:"); Serial.println(numISRcalls-sum);
+    Serial.print(F(" | Missed:")); Serial.println(numISRcalls-sum);
   #endif
   
   // rolling average via rotating buffer, so to speak

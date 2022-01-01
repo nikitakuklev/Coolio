@@ -1,21 +1,18 @@
 #include "lcd.h"
 #include "errors.h"
-
+#include "SoftWire.h"
 
 #if HASLCD
 
-#include "SoftWire.h"
-
 //inline TwoWire Wire = TwoWire();
-SoftWire Wire = SoftWire();
+//SoftWire Wire = SoftWire();
 
 #include <hd44780.h>                       // main hd44780 header
 #include <hd44780ioClass/hd44780_I2Cexp.h> // i2c expander i/o class header
 
-#if HASLCD
-//inline LiquidCrystal_SI2C lcd(0x3F, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE); 
-hd44780_I2Cexp lcd(0x3F, I2Cexp_PCF8574, 2, 1, 0, 4, 5, 6, 7, 3, HIGH);
-#endif
+//inline LiquidCrystal_SI2C lcd(0x3F, 2//en, 1//rw, 0//rs, 4//d4, 5//d5, 6//d6, 7//d7, 3//bl, POSITIVE); 
+hd44780_I2Cexp lcd(0x3F, I2Cexp_PCF8574, 0, 1, 2, 4, 5, 6, 7, 3, HIGH);
+//hd44780_I2Cexp lcd(0x3F);
 
 void setupLCD() {
   #if (DEBUG)
