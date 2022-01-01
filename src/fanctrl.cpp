@@ -153,10 +153,10 @@ void updatePWMvalues() {
 
 void fanCtrlAlarmCheck() {
   #if (DEBUG>1)
-    Serial.print(F(" Checking fan alarms (active): ")); printBits(FANCTRL_ACTFANS); Serial.println("");
+    Serial.print(F(" Checking alarms (active): ")); printBits(FANCTRL_ACTFANS); Serial.println("");
   #endif
   for (uint8_t i=0; i<FANARR_SIZE; ++i) {
-    if (fanrpms[i]<FANCTRL_ALARMRPM && fan_state != 0 && (FANCTRL_ACTFANS & (1<<i))) {
+    if (fanrpms[i]<FANCTRL_ALARMRPM && fan_state != 0 && (FANCTRL_ACTFANS & (1<<i)) && GUImode != GUI_DUMB) {
       ++fanFailScores[i];
       #if (DEBUG>1)
         Serial.print(F("  Check FAIL (fan|rpm|cnt): ")); Serial.print(i); vline();

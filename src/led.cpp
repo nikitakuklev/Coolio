@@ -30,6 +30,10 @@ void setOKLed(uint8_t state) {
       case (LED_FLASH):
         led_green_counter = 0;
         break;
+      case LED_FAST_FLASH:
+        led_green_counter = 0;
+        LED_GREEN_PORT &= ~LED_GREEN_PIN;
+        break;
       default:
         LED_GREEN_PORT &= ~LED_GREEN_PIN;
         break;
@@ -86,13 +90,24 @@ void updateLED() {
         // Set new timeout
         if (LED_GREEN_PORT & LED_GREEN_PIN) {
           // Long section with led off
-          led_green_counter = 30;
+          led_green_counter = 100;
         } else {
           // Short section with led on
           led_green_counter = 1;
         }  
         // Toggle led 
         LED_GREEN_PORT ^= LED_GREEN_PIN;     
+      }
+      break;
+    case(LED_FAST_FLASH):
+      if (led_green_counter > 0) {
+        --led_green_counter;
+      } else {
+        // Blink LED on
+        led_green_counter = LED_FAST_FLASH_N; 
+        LED_GREEN_PORT |= LED_GREEN_PIN;
+        delayMicroseconds(2000);
+        LED_GREEN_PORT &= ~LED_GREEN_PIN;                 
       }
       break;
     default:

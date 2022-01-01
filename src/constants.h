@@ -33,8 +33,8 @@
 #define LOOP_TEMP_UPDT      3999
 #define LOOP_FANCTRL_UPDT   2999
 #define LOOP_TACH_UPDT      7919      // prime 1000
-#define LOOP_GUI_UPDT       5000
-#define LOOP_GUI_UPDT_FAST  500
+#define LOOP_GUI_UPDT       3000
+#define LOOP_GUI_UPDT_FAST  300
 #define LOOP_LED_UPDT       100
 #define LOOP_ADC_UPDT       15117
 
@@ -85,14 +85,17 @@
 #define LED_RED_DDR       DDRB
 #define LED_RED_PIN       B00100000 
 #define LED_BLINK_PERIOD  600
+#define LED_FAST_FLASH_P  10000
+#define LED_FAST_FLASH_N  LED_FAST_FLASH_P/LOOP_LED_UPDT
 #define LED_OFF           0
 #define LED_ON            1
 #define LED_BLINK_SLOW    2
 #define LED_FLASH         3
 #define LED_DBLFLASH      4
+#define LED_FAST_FLASH    5
 
 // TEMPERATURE SENSOR
-#define FAKE_TEMP_OUTPUT  1
+#define FAKE_TEMP_OUTPUT  0
 #define MLX90614_I2CADDR  0x5A
 // RAM
 #define MLX90614_RAWIR1   0x04

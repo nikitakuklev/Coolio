@@ -1,6 +1,7 @@
 #include "ir.h"
 #include "errors.h"
 #include "extras.h"
+#include "adc.h"
 
 #define SOFTWIRE 1
 

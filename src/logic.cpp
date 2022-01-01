@@ -155,7 +155,7 @@ void setLED_manualmode() {
 }
 
 void setLED_dumbmode() {
-  setOKLed(LED_ON);
+  setOKLed(LED_FAST_FLASH);
   if (lastErrorCode == 0 && systemCode == 0) {
     setErrLed(LED_OFF);
   } else {
